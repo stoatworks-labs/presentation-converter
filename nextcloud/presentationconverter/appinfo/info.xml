@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>presentationconverter</id>
+    <name>Presentation Converter</name>
+    <summary>Automatically generate PDF versions of every presentation in a folder and its subfolders, with a presenter-notes sidecar</summary>
+    <description><![CDATA[Keeps PDF copies of your presentations up to date automatically.
+
+Point the app at one or more folders and it will convert every Keynote, PowerPoint, ODP and
+legacy .ppt presentation found in them - and in all their subfolders - to PDF, writing the PDF
+alongside the original (or into a folder of your choosing). Alongside each PDF it writes a
+`.notes.json` sidecar containing the presenter notes, slide titles and the slide-to-page mapping,
+so the notes survive a conversion that would otherwise throw them away.
+
+Conversion happens server-side through LibreOffice. Because Keynote cannot run on a Linux server,
+`.key` files can optionally be forwarded to a paired macOS machine running
+`presentation-converter serve` - see the admin settings.
+
+Files are only ever converted when the source is newer than the existing PDF, so a scan over an
+unchanged folder is cheap.
+    ]]></description>
+    <version>0.1.0</version>
+    <licence>agpl</licence>
+    <author>Allan Sargeant</author>
+    <namespace>PresentationConverter</namespace>
+    <category>files</category>
+    <category>tools</category>
+    <website>https://github.com/allansargeant/presentation-converter</website>
+    <repository>https://github.com/allansargeant/presentation-converter.git</repository>
+    <bugs>https://github.com/allansargeant/presentation-converter/issues</bugs>
+    <dependencies>
+        <php min-version="8.1"/>
+        <nextcloud min-version="27" max-version="31"/>
+    </dependencies>
+    <navigations>
+        <navigation>
+            <name>Presentation Converter</name>
+            <route>presentationconverter.page.index</route>
+            <icon>app.svg</icon>
+            <order>60</order>
+        </navigation>
+    </navigations>
+    <settings>
+        <admin>OCA\PresentationConverter\Settings\AdminSettings</admin>
+        <admin-section>OCA\PresentationConverter\Settings\AdminSection</admin-section>
+    </settings>
+</info>

@@ -1,0 +1,31 @@
+{
+  "name": "@presentation-converter/core",
+  "version": "0.1.0",
+  "description": "Conversion engines, presenter-notes extraction and the notes sidecar format",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test --experimental-strip-types test/*.test.ts"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "fast-xml-parser": "^4.5.1",
+    "fflate": "^0.8.2",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

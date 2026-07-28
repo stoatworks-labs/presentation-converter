@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "presentation-converter",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["packages/cli/dist/index.js", "serve", "--port", "4747"],
+      "port": 4747
+    }
+  ]
+}

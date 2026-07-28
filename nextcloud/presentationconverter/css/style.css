@@ -1,0 +1,156 @@
+.pconv {
+  padding: 24px 32px;
+  max-width: 900px;
+}
+
+.pconv-header h2 {
+  margin: 0 0 4px;
+}
+
+.pconv-lede {
+  color: var(--color-text-maxcontrast);
+  margin: 0 0 20px;
+}
+
+.pconv-formats {
+  color: var(--color-text-maxcontrast);
+  font-size: 0.9em;
+  margin: 0 0 16px;
+}
+
+.pconv-muted {
+  color: var(--color-text-maxcontrast);
+}
+
+.pconv-banner {
+  padding: 10px 14px;
+  border-radius: var(--border-radius-large, 8px);
+  margin: 12px 0;
+  border: 1px solid var(--color-border);
+}
+
+.pconv-banner--warning {
+  background: var(--color-warning, #f0a020);
+  color: var(--color-primary-text, #fff);
+  border-color: transparent;
+}
+
+.pconv-banner--error {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.pconv-banner--ok {
+  border-color: var(--color-success);
+}
+
+.pconv-add {
+  margin: 20px 0 8px;
+}
+
+.pconv-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pconv-row input[type='text'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.pconv-hint {
+  color: var(--color-text-maxcontrast);
+  font-size: 0.85em;
+  margin: 6px 0 0;
+}
+
+.pconv-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.pconv-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-maxcontrast);
+  border-bottom: 1px solid var(--color-border);
+  padding: 8px 6px;
+  font-size: 0.9em;
+}
+
+.pconv-table td {
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.pconv-path {
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+
+.pconv-bad {
+  color: var(--color-error);
+}
+
+.pconv-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pconv-actions button {
+  margin-left: 6px;
+}
+
+.pconv-danger {
+  color: var(--color-error);
+}
+
+.pconv-empty td {
+  color: var(--color-text-maxcontrast);
+  text-align: center;
+  padding: 20px;
+}
+
+/* --- admin ------------------------------------------------------------- */
+
+.pconv-admin .pconv-status {
+  margin: 12px 0 20px;
+}
+
+.pconv-status-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 12px;
+  border-left: 3px solid var(--color-border);
+  margin-bottom: 6px;
+  background: var(--color-background-hover);
+  border-radius: 0 4px 4px 0;
+}
+
+.pconv-status-row.ok {
+  border-left-color: var(--color-success);
+}
+
+.pconv-status-row.bad {
+  border-left-color: var(--color-error);
+}
+
+.pconv-status-row.off {
+  opacity: 0.6;
+}
+
+.pconv-status-row span {
+  color: var(--color-text-maxcontrast);
+  font-size: 0.9em;
+}
+
+.pconv-admin .settings-hint {
+  display: block;
+  color: var(--color-text-maxcontrast);
+  font-size: 0.85em;
+  margin-top: 3px;
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@presentation-converter/cli",
+  "version": "0.1.0",
+  "description": "Command-line interface for presentation-converter",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "presentation-converter": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@presentation-converter/core": "0.1.0",
+    "@presentation-converter/server": "0.1.0",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+out/
+build/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.local
+coverage/
+
+# Local scratch output from manual conversion runs
+/tmp-out/
+/fixtures-out/

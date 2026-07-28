@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- A slide with a turned-down corner, over a notes line stack: a deck
+       becoming a PDF that keeps its presenter notes. -->
+  <path d="M6 3h12l8 8v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M18 3v8h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="8" y="14" width="12" height="2" rx="1" fill="currentColor"/>
+  <rect x="8" y="19" width="12" height="2" rx="1" fill="currentColor"/>
+  <rect x="8" y="24" width="7" height="2" rx="1" fill="currentColor"/>
+</svg>
