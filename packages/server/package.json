@@ -12,7 +12,9 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -20,7 +22,8 @@
   },
   "dependencies": {
     "@presentation-converter/core": "0.1.0",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "pino": "^10.3.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

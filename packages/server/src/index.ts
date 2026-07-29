@@ -16,6 +16,21 @@ import {
 import { JobManager } from './jobs.js'
 import { browse, describePath } from './browse.js'
 import { registerSettingsRoutes, PUBLIC_SETTINGS_PATHS } from './settingsRoutes.js'
+import { collectDiagnostics, init as initDiag, log, say } from './diag/index.js';
+
+// Before anything that can fail, so a failure during startup is logged and
+// captured like any other.
+initDiag({
+  app: 'presentation-converter-server',
+  envPrefix: 'PRESENTATION_CONVERTER',
+  version: '0.1.0',
+});
+
+if (process.argv.includes('--collect-diagnostics')) {
+  // stdout, so it can be used in a script; logging went to stderr.
+  say.info(collectDiagnostics());
+  process.exit(0);
+}
 
 export { JobManager, type Job } from './jobs.js'
 
