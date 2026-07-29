@@ -66,4 +66,4 @@ presentations to PDF, and recovers the presenter notes into a `.notes.json` side
   development machine, so Office and ODF rendering was exercised through Keynote instead.
 - Keynote cannot run on Linux, so a Linux host needs a paired Mac for `.key` files.
 
-[0.1.0]: https://github.com/allansargeant/presentation-converter/releases/tag/v0.1.0
+[0.1.0]: https://github.com/stoatworks-labs/presentation-converter/releases/tag/v0.1.0

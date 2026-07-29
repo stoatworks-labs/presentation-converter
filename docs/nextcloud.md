@@ -44,7 +44,7 @@ dependable local path.
 3. Install the converter itself somewhere the web server user can execute:
 
    ```bash
-   git clone https://github.com/allansargeant/presentation-converter.git /opt/presentation-converter
+   git clone https://github.com/stoatworks-labs/presentation-converter.git /opt/presentation-converter
    cd /opt/presentation-converter && npm install && npm run build
    ```
 

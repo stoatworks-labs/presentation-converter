@@ -7,7 +7,7 @@
   "author": "Allan Sargeant",
   "repository": {
     "type": "git",
-    "url": "https://github.com/allansargeant/presentation-converter.git"
+    "url": "https://github.com/stoatworks-labs/presentation-converter.git"
   },
   "workspaces": [
     "packages/core",

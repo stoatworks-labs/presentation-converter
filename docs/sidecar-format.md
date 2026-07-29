@@ -9,7 +9,7 @@ Q3 Review.notes.json
 
 The sidecar's name is derived from the PDF's by replacing the `.pdf` extension with
 `.notes.json`. That derivation is the contract with
-[presentation-commander-client](https://github.com/allansargeant/presentation-commander-client),
+[presentation-commander-client](https://github.com/stoatworks-labs/presentation-commander-client),
 which computes it the same way — don't change one without the other.
 
 ## Schema (version 1)

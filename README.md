@@ -15,7 +15,7 @@ PDF *and* recovers the notes, mapped to the right page.
 - A **desktop GUI** — pick files, convert a whole folder, or leave a watch folder running,
   and connect Google or Canva accounts from the Settings tab.
 - A **CLI and library** — the backend other programs drive, including
-  [presentation-commander](https://github.com/allansargeant/presentation-commander-client),
+  [presentation-commander](https://github.com/stoatworks-labs/presentation-commander-client),
   which reads the sidecars this produces.
 - A **Nextcloud app** — keeps PDF versions of every presentation in a folder and its
   subfolders up to date automatically.
@@ -48,7 +48,7 @@ being quietly wrong.
 Requires Node.js 20+.
 
 ```bash
-git clone https://github.com/allansargeant/presentation-converter.git
+git clone https://github.com/stoatworks-labs/presentation-converter.git
 cd presentation-converter
 npm install
 npm run build

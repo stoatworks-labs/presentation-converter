@@ -25,9 +25,9 @@ unchanged folder is cheap.
     <namespace>PresentationConverter</namespace>
     <category>files</category>
     <category>tools</category>
-    <website>https://github.com/allansargeant/presentation-converter</website>
-    <repository>https://github.com/allansargeant/presentation-converter.git</repository>
-    <bugs>https://github.com/allansargeant/presentation-converter/issues</bugs>
+    <website>https://github.com/stoatworks-labs/presentation-converter</website>
+    <repository>https://github.com/stoatworks-labs/presentation-converter.git</repository>
+    <bugs>https://github.com/stoatworks-labs/presentation-converter/issues</bugs>
     <dependencies>
         <php min-version="8.1"/>
         <nextcloud min-version="27" max-version="31"/>
