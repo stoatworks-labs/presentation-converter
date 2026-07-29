@@ -90,3 +90,11 @@ or Slides conversion (needs real credentials + a human at the consent screen).
 ## Notes
 - "Commit" = commit **and** push.
 - Ships the user-facing AI disclaimer in the README.
+
+## Diagnostics
+
+Log via `log` (structured: `log.warn({ device }, 'reconnecting')`) or `say` (console-shaped,
+for existing call sites) from the vendored `diag` module — never `console`. Anything written
+to stdout corrupts `--collect-diagnostics`, whose stdout is a path. File writes are
+synchronous on purpose: an async stream loses the crashing run's log.
+See [docs/diagnostics.md](docs/diagnostics.md).
