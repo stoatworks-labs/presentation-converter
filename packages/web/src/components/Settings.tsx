@@ -283,10 +283,13 @@ export function Settings(): JSX.Element {
       <div className="panel">
         <h2>Canva</h2>
         <p className="hint">
-          Not supported yet. Canva&rsquo;s Connect API can export a design to PDF, but it exposes no
-          speaker-notes field on designs, pages or exports — so notes would have to be recovered from a
-          PPTX export, which is not guaranteed to carry them. See{' '}
-          <code>docs/canva.md</code> for the full assessment.
+          <strong>Canva decks already work — no account needed here.</strong> In Canva choose{' '}
+          <em>Download → PPTX</em>, then convert that file like any other PowerPoint deck. Canva
+          embeds the speaker notes in it, so they come through in the sidecar.
+        </p>
+        <p className="hint">
+          Converting straight from a Canva URL would need Canva&rsquo;s Connect API, which is not
+          implemented yet — see <code>docs/canva.md</code>.
         </p>
       </div>
 

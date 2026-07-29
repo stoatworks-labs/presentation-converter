@@ -104,13 +104,32 @@ function slidePartsByNumber(archive: ZipArchive): string[] {
     })
 }
 
+/** Longest first line still plausibly a title rather than a paragraph. */
+const MAX_TITLE_LENGTH = 120
+
 function titleOf(slideTree: XmlTree): string | undefined {
-  for (const shape of findAll(slideTree, 'p:sp')) {
+  const shapes = findAll(slideTree, 'p:sp')
+
+  for (const shape of shapes) {
     const type = placeholderType(shape)
     if (type && TITLE_PLACEHOLDERS.has(type)) {
       const text = tidyNotes(shapeText(shape))
       if (text) return text.split('\n')[0]
     }
+  }
+
+  // Some exporters lay every slide out with plain shapes and no placeholders at
+  // all — Canva's PPTX export is one, verified against a real export. Those
+  // decks have no title placeholder to find, so fall back to the first piece of
+  // text on the slide, but only when the deck genuinely uses no placeholders:
+  // where placeholders exist and none is a title, the author really has no
+  // title and guessing one from body text would be worse than leaving it unset.
+  if (shapes.some((shape) => placeholderType(shape) !== undefined)) return undefined
+
+  for (const shape of shapes) {
+    const text = tidyNotes(shapeText(shape))
+    const firstLine = text.split('\n')[0]?.trim()
+    if (firstLine && firstLine.length <= MAX_TITLE_LENGTH) return firstLine
   }
   return undefined
 }

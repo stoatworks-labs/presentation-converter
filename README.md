@@ -142,10 +142,18 @@ address, and Drive refuses to export presentations over 10 MB.
 
 ### Canva
 
-Not supported. Canva's Connect API can export PDF and PPTX, but exposes **no speaker-notes
-field** on designs, pages or exports — and notes are the point of this tool.
-[docs/canva.md](docs/canva.md) records what was checked, the one route that might work, and
-a five-minute test that would settle it.
+**Canva decks convert today, notes and all** — export from Canva with *Download → PPTX*,
+then convert it like any other PowerPoint file:
+
+```bash
+presentation-converter convert "My Canva Deck.pptx"
+```
+
+Canva embeds speaker notes in the standard OOXML notes parts, so the normal `.pptx` path
+picks them up. Verified against a real Canva export, which ships as a test fixture.
+
+Converting straight from a Canva URL — automating that download through Canva's Connect
+API — is not implemented yet. [docs/canva.md](docs/canva.md) has the design.
 
 ## The sidecar
 

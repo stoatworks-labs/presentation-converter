@@ -54,15 +54,24 @@ Nextcloud app. Public repo, MIT (the Nextcloud app is AGPL, as Nextcloud apps mu
   means "keep the stored one", so the GUI can avoid echoing it.
 
 ## Canva
-Assessed and **not implemented** — see `docs/canva.md`. The Connect API exposes no
-speaker-notes field anywhere, so the only route is exporting PPTX and parsing it with the
-existing `package-xml` engine, which hinges on an untested assumption. Don't start building
-it before running the five-minute test in that doc.
+**Canva decks already convert**: its *Download → PPTX* export embeds notes in the standard
+OOXML notes parts, so the existing `package-xml` engine reads them with no new code.
+Verified against a real export, kept as `packages/core/test/fixtures/canva-export.pptx` —
+don't delete it; it's what stops a refactor silently losing Canva notes.
+
+Only the Connect API automation (convert straight from a Canva URL) is unimplemented; see
+`docs/canva.md`. Note the Connect API exposes **no** notes field, so any Canva engine must
+fetch PPTX, never PDF alone.
+
+**Canva writes no `<p:ph>` placeholders at all.** `titleOf()` therefore falls back to the
+slide's first line of text, but only when a deck uses no placeholders anywhere — where
+placeholders exist and none is a title, the author genuinely has no title and guessing from
+body text would be worse.
 
 ## Verification status
 Verified on macOS against real Keynote-authored fixtures: `.key`/`.pptx` conversion,
 hidden-slide mapping, batch + tree mirroring, incremental skip, collision detection, watch
-folder, GUI, worker endpoint. Settings/OAuth endpoints verified: 0600 storage, redaction,
+folder, GUI, worker endpoint, and a real Canva PPTX export. Settings/OAuth endpoints verified: 0600 storage, redaction,
 forged-`state` rejection, consent-URL parameters, blank-secret preservation.
 **Unverified:** the Nextcloud app (no PHP/Docker on this machine — never run or
 lint-checked), the LibreOffice engine (not installed), and a real Google OAuth round trip
