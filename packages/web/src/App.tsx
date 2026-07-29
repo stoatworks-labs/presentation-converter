@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState } from 'react'
 import { api, subscribe, type EngineStatus, type Job } from './api'
 import { PathPicker } from './components/PathPicker'
 import { Results } from './components/Results'
+import { Settings } from './components/Settings'
 
-type Mode = 'files' | 'folder' | 'watch'
+type Mode = 'files' | 'folder' | 'watch' | 'settings'
 
 const MODE_LABEL: Record<Mode, string> = {
   files: 'Individual files',
   folder: 'Whole folder',
-  watch: 'Watch folder'
+  watch: 'Watch folder',
+  settings: 'Settings'
 }
 
 function Engines({ engines }: { engines: EngineStatus[] }): JSX.Element {
@@ -135,6 +137,16 @@ export function App(): JSX.Element {
 
   const watching = job?.kind === 'watch' && job.state === 'running'
 
+  // Re-probe engines when leaving Settings, so a Google account connected a
+  // moment ago shows as available without a reload.
+  useEffect(() => {
+    if (mode === 'settings') return
+    void api
+      .status()
+      .then((status) => setEngines(status.engines))
+      .catch(() => undefined)
+  }, [mode])
+
   return (
     <div className="app">
       <header className="masthead">
@@ -160,6 +172,10 @@ export function App(): JSX.Element {
         ))}
       </div>
 
+      {mode === 'settings' ? (
+        <Settings />
+      ) : (
+      <>
       <div className="panel">
         <h2>{MODE_LABEL[mode]}</h2>
 
@@ -259,6 +275,8 @@ export function App(): JSX.Element {
       </div>
 
       <Results job={job} onStop={(id) => void stop(id)} />
+      </>
+      )}
       <Engines engines={engines} />
     </div>
   )

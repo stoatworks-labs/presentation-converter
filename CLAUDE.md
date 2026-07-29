@@ -40,11 +40,33 @@ Nextcloud app. Public repo, MIT (the Nextcloud app is AGPL, as Nextcloud apps mu
 - Sidecar naming (`X.pdf` → `X.notes.json`) is a contract with
   `presentation-commander-client`; changing it breaks that app.
 
+## Settings & credentials
+- `core/settings.ts` stores cloud credentials at the OS config dir, mode **0600**. The
+  store is provider-keyed (`google`, `canva`) so a new provider is an additive change.
+- **Env vars beat the settings file.** An operator setting
+  `GOOGLE_APPLICATION_CREDENTIALS` must not be silently overridden by a stale config.
+- `/api/google/callback` is exempt from the bearer-token middleware — Google redirects a
+  *browser* there, which cannot send an Authorization header. It is guarded by a
+  single-use `state` instead. Don't "tidy" that exemption away.
+- OAuth needs `access_type=offline` **and** `prompt=consent`; without the forced consent
+  Google returns no refresh token and unattended conversion dies after an hour.
+- Secrets are never returned to the browser — only `…Set: boolean`. A blank secret field
+  means "keep the stored one", so the GUI can avoid echoing it.
+
+## Canva
+Assessed and **not implemented** — see `docs/canva.md`. The Connect API exposes no
+speaker-notes field anywhere, so the only route is exporting PPTX and parsing it with the
+existing `package-xml` engine, which hinges on an untested assumption. Don't start building
+it before running the five-minute test in that doc.
+
 ## Verification status
 Verified on macOS against real Keynote-authored fixtures: `.key`/`.pptx` conversion,
-hidden-slide mapping, batch + tree mirroring, incremental skip, collision detection, GUI,
-worker endpoint. **Unverified:** the Nextcloud app (no PHP/Docker on this machine — never
-run or lint-checked), the LibreOffice engine (not installed), Google Slides (no creds).
+hidden-slide mapping, batch + tree mirroring, incremental skip, collision detection, watch
+folder, GUI, worker endpoint. Settings/OAuth endpoints verified: 0600 storage, redaction,
+forged-`state` rejection, consent-URL parameters, blank-secret preservation.
+**Unverified:** the Nextcloud app (no PHP/Docker on this machine — never run or
+lint-checked), the LibreOffice engine (not installed), and a real Google OAuth round trip
+or Slides conversion (needs real credentials + a human at the consent screen).
 
 ## Notes
 - "Commit" = commit **and** push.

@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { createSign } from 'node:crypto'
+import { settingsStore, type SettingsStore } from '../settings.js'
 import type {
   EngineAvailability,
   ExtractedNotes,
@@ -24,12 +25,45 @@ export const GOOGLE_SCOPES = [
 export interface GoogleCredentials {
   /** Path to a service-account JSON key. Best for headless/Nextcloud use. */
   serviceAccountPath?: string
+  /** A service-account key held inline, as stored by the settings page. */
+  serviceAccountJson?: string
   /** A pre-obtained OAuth access token, used verbatim. */
   accessToken?: string
   /** Installed-app OAuth refresh token plus its client, exchanged on demand. */
   refreshToken?: string
   clientId?: string
   clientSecret?: string
+}
+
+/** True when this credential set is complete enough to mint a token. */
+export function isUsable(credentials: GoogleCredentials): boolean {
+  if (credentials.accessToken) return true
+  if (credentials.serviceAccountPath || credentials.serviceAccountJson) return true
+  return Boolean(credentials.refreshToken && credentials.clientId && credentials.clientSecret)
+}
+
+/**
+ * Credentials for the current environment.
+ *
+ * Environment variables win over the stored settings file. A server operator
+ * setting `GOOGLE_APPLICATION_CREDENTIALS` intends that key to be used, and a
+ * stale config file left in the service account's home directory silently
+ * overriding it would be a genuinely nasty surprise. Desktop users, who have
+ * no such variables set, get the settings file.
+ */
+export async function resolveGoogleCredentials(
+  store: SettingsStore = settingsStore
+): Promise<GoogleCredentials> {
+  const fromEnv = credentialsFromEnv()
+  if (isUsable(fromEnv)) return fromEnv
+
+  const stored = (await store.read()).google ?? {}
+  return {
+    ...(stored.clientId ? { clientId: stored.clientId } : {}),
+    ...(stored.clientSecret ? { clientSecret: stored.clientSecret } : {}),
+    ...(stored.refreshToken ? { refreshToken: stored.refreshToken } : {}),
+    ...(stored.serviceAccountJson ? { serviceAccountJson: stored.serviceAccountJson } : {})
+  }
 }
 
 /** Reads credentials from the environment, matching the CLI's documented vars. */
@@ -65,7 +99,27 @@ interface CachedToken {
   token: string
   expiresAt: number
 }
-let cachedToken: CachedToken | undefined
+
+/**
+ * Access tokens, keyed by the credential that produced them.
+ *
+ * Keyed rather than a single slot because one process can legitimately act as
+ * two identities — a service account for a scheduled job and a signed-in user
+ * from the GUI — and a shared cache would hand one's token to the other.
+ */
+const tokenCache = new Map<string, CachedToken>()
+
+function cacheKeyFor(credentials: GoogleCredentials): string {
+  if (credentials.refreshToken) return `refresh:${credentials.refreshToken.slice(-16)}`
+  if (credentials.serviceAccountPath) return `sa-path:${credentials.serviceAccountPath}`
+  if (credentials.serviceAccountJson) return `sa-json:${credentials.serviceAccountJson.length}`
+  return 'anonymous'
+}
+
+/** Forgets cached tokens. Called after credentials change. */
+export function resetGoogleTokenCache(): void {
+  tokenCache.clear()
+}
 
 /**
  * Mints an access token from whichever credential is configured.
@@ -80,7 +134,9 @@ export async function getAccessToken(
 ): Promise<string> {
   if (credentials.accessToken) return credentials.accessToken
 
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) return cachedToken.token
+  const cacheKey = cacheKeyFor(credentials)
+  const cached = tokenCache.get(cacheKey)
+  if (cached && cached.expiresAt > Date.now() + 60_000) return cached.token
 
   if (credentials.refreshToken && credentials.clientId && credentials.clientSecret) {
     const body = new URLSearchParams({
@@ -90,17 +146,27 @@ export async function getAccessToken(
       grant_type: 'refresh_token'
     })
     const token = await requestToken(body)
-    cachedToken = token
+    tokenCache.set(cacheKey, token)
     return token.token
   }
 
-  if (credentials.serviceAccountPath) {
-    const key = JSON.parse(await readFile(credentials.serviceAccountPath, 'utf-8')) as {
-      client_email: string
-      private_key: string
+  if (credentials.serviceAccountPath || credentials.serviceAccountJson) {
+    const raw = credentials.serviceAccountJson
+      ? credentials.serviceAccountJson
+      : await readFile(credentials.serviceAccountPath!, 'utf-8')
+
+    let key: { client_email: string; private_key: string }
+    try {
+      key = JSON.parse(raw) as { client_email: string; private_key: string }
+    } catch {
+      throw new Error('The service-account key is not valid JSON')
     }
     if (!key.client_email || !key.private_key) {
-      throw new Error(`${credentials.serviceAccountPath} is not a valid service-account key file`)
+      throw new Error(
+        credentials.serviceAccountPath
+          ? `${credentials.serviceAccountPath} is not a valid service-account key file`
+          : 'The stored service-account key is missing client_email or private_key'
+      )
     }
 
     const now = Math.floor(Date.now() / 1000)
@@ -123,7 +189,7 @@ export async function getAccessToken(
       assertion: `${header}.${claims}.${signature}`
     })
     const token = await requestToken(body)
-    cachedToken = token
+    tokenCache.set(cacheKey, token)
     return token.token
   }
 
@@ -131,6 +197,110 @@ export async function getAccessToken(
     'No Google credentials configured. Set GOOGLE_APPLICATION_CREDENTIALS to a service-account key, ' +
       'or PRESENTATION_CONVERTER_GOOGLE_REFRESH_TOKEN with its client id/secret.'
   )
+}
+
+// ---------------------------------------------------------------------------
+// Installed-app OAuth
+// ---------------------------------------------------------------------------
+
+const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
+const USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo'
+
+/**
+ * Builds the consent URL for the installed-app (loopback) flow.
+ *
+ * `access_type=offline` with `prompt=consent` is required to be issued a
+ * refresh token: without the forced consent, Google returns only an access
+ * token on any re-authorisation, and unattended conversion then stops working
+ * an hour later.
+ */
+export function buildGoogleAuthUrl(options: {
+  clientId: string
+  redirectUri: string
+  state: string
+}): string {
+  const params = new URLSearchParams({
+    client_id: options.clientId,
+    redirect_uri: options.redirectUri,
+    response_type: 'code',
+    // `email` so the settings page can show which account is connected.
+    scope: [...GOOGLE_SCOPES, 'email'].join(' '),
+    access_type: 'offline',
+    prompt: 'consent',
+    include_granted_scopes: 'true',
+    state: options.state
+  })
+  return `${AUTH_URL}?${params.toString()}`
+}
+
+export interface GoogleTokenExchange {
+  accessToken: string
+  refreshToken?: string
+  expiresIn: number
+}
+
+/** Exchanges an authorisation code for tokens. */
+export async function exchangeGoogleCode(options: {
+  clientId: string
+  clientSecret: string
+  code: string
+  redirectUri: string
+}): Promise<GoogleTokenExchange> {
+  const response = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: options.clientId,
+      client_secret: options.clientSecret,
+      code: options.code,
+      redirect_uri: options.redirectUri,
+      grant_type: 'authorization_code'
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Google rejected the authorisation code (${response.status}): ${await response.text()}`)
+  }
+
+  const json = (await response.json()) as {
+    access_token: string
+    refresh_token?: string
+    expires_in: number
+  }
+
+  return {
+    accessToken: json.access_token,
+    ...(json.refresh_token ? { refreshToken: json.refresh_token } : {}),
+    expiresIn: json.expires_in
+  }
+}
+
+/** The signed-in account's email, for display on the settings page. */
+export async function fetchGoogleAccount(accessToken: string): Promise<string | undefined> {
+  try {
+    const response = await fetch(USERINFO_URL, {
+      headers: { authorization: `Bearer ${accessToken}` }
+    })
+    if (!response.ok) return undefined
+    const json = (await response.json()) as { email?: string }
+    return json.email
+  } catch {
+    // Purely cosmetic; never fail a connection over it.
+    return undefined
+  }
+}
+
+/** Confirms stored credentials still work, returning the account when they do. */
+export async function verifyGoogleCredentials(
+  credentials: GoogleCredentials
+): Promise<{ ok: boolean; account?: string; error?: string }> {
+  try {
+    const token = await getAccessToken(credentials)
+    const account = await fetchGoogleAccount(token)
+    return { ok: true, ...(account ? { account } : {}) }
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) }
+  }
 }
 
 async function requestToken(body: URLSearchParams): Promise<CachedToken> {
@@ -226,16 +396,17 @@ interface SlidesResponse {
 /** Notes plus per-slide metadata for a Google Slides presentation. */
 export async function fetchGoogleSlidesNotes(
   presentationId: string,
-  credentials: GoogleCredentials = credentialsFromEnv(),
+  credentials?: GoogleCredentials,
   signal?: AbortSignal
 ): Promise<ExtractedNotes> {
+  const resolved = credentials ?? (await resolveGoogleCredentials())
   // Request only the fields needed; a full presentation payload is large.
   const fields =
     'slides(slideProperties(isSkipped,notesPage(pageElements(objectId,shape(text(textElements(textRun(content))))),' +
     'notesProperties(speakerNotesObjectId))),pageElements(shape(placeholder(type),text(textElements(textRun(content))))))'
   const response = await authorisedFetch(
     `${SLIDES_API}/${presentationId}?fields=${encodeURIComponent(fields)}`,
-    credentials,
+    resolved,
     signal
   )
   const data = (await response.json()) as SlidesResponse
@@ -276,15 +447,12 @@ function titleOfSlide(elements: unknown[]): string | undefined {
 }
 
 async function probeGoogle(): Promise<EngineAvailability> {
-  const credentials = credentialsFromEnv()
-  const configured =
-    credentials.accessToken ?? credentials.serviceAccountPath ?? credentials.refreshToken
-  if (!configured) {
+  if (!isUsable(await resolveGoogleCredentials())) {
     return {
       available: false,
       reason:
-        'No Google credentials configured. Set GOOGLE_APPLICATION_CREDENTIALS to a service-account key file, ' +
-        'or supply an OAuth refresh token.'
+        'No Google account connected. Connect one on the Settings page, or set ' +
+        'GOOGLE_APPLICATION_CREDENTIALS to a service-account key file.'
     }
   }
   return { available: true }
@@ -299,7 +467,7 @@ export const googleSlidesEngine: PdfEngine = {
   probe: probeGoogle,
 
   async render(options: RenderOptions): Promise<PdfRenderResult> {
-    const credentials = credentialsFromEnv()
+    const credentials = await resolveGoogleCredentials()
     const id = await resolvePresentationId(options.sourcePath)
     const response = await authorisedFetch(
       `${DRIVE_EXPORT}/${id}/export?mimeType=application%2Fpdf`,
@@ -322,6 +490,6 @@ export const googleSlidesNotesEngine: NotesEngine = {
 
   async extract(sourcePath: string, signal?: AbortSignal): Promise<ExtractedNotes> {
     const id = await resolvePresentationId(sourcePath)
-    return fetchGoogleSlidesNotes(id, credentialsFromEnv(), signal)
+    return fetchGoogleSlidesNotes(id, await resolveGoogleCredentials(), signal)
   }
 }

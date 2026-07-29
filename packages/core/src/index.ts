@@ -34,9 +34,28 @@ export {
   resolvePresentationId,
   fetchGoogleSlidesNotes,
   credentialsFromEnv,
+  resolveGoogleCredentials,
+  buildGoogleAuthUrl,
+  exchangeGoogleCode,
+  fetchGoogleAccount,
+  verifyGoogleCredentials,
+  resetGoogleTokenCache,
+  isUsable as isGoogleCredentialUsable,
   GOOGLE_SCOPES,
-  type GoogleCredentials
+  type GoogleCredentials,
+  type GoogleTokenExchange
 } from './engines/google.js'
+
+export {
+  SettingsStore,
+  settingsStore,
+  defaultConfigPath,
+  redactedSettings,
+  type Settings,
+  type GoogleSettings,
+  type CanvaSettings,
+  type RedactedSettings
+} from './settings.js'
 
 export { extractPptxNotes } from './notes/ooxml.js'
 export { extractOdpNotes } from './notes/odf.js'

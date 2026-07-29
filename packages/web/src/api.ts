@@ -88,7 +88,50 @@ export const api = {
       body: JSON.stringify({ inputDir, ...options })
     }),
 
-  stopJob: (id: string) => request<{ stopped: boolean }>(`/api/jobs/${id}/stop`, { method: 'POST' })
+  stopJob: (id: string) => request<{ stopped: boolean }>(`/api/jobs/${id}/stop`, { method: 'POST' }),
+
+  settings: () => request<RedactedSettings>('/api/settings'),
+
+  saveGoogleSettings: (patch: {
+    clientId?: string
+    clientSecret?: string
+    serviceAccountJson?: string
+  }) =>
+    request<RedactedSettings>('/api/settings/google', {
+      method: 'PUT',
+      body: JSON.stringify(patch)
+    }),
+
+  googleConnect: (origin: string) =>
+    request<{ url: string; redirectUri: string }>('/api/google/connect', {
+      method: 'POST',
+      body: JSON.stringify({ origin })
+    }),
+
+  googleTest: () =>
+    request<{ ok: boolean; account?: string; error?: string }>('/api/google/test', {
+      method: 'POST'
+    }),
+
+  googleDisconnect: () =>
+    request<RedactedSettings>('/api/google/disconnect', { method: 'POST' })
+}
+
+export interface RedactedSettings {
+  configPath: string
+  google: {
+    clientIdSet: boolean
+    clientSecretSet: boolean
+    connected: boolean
+    account?: string
+    serviceAccountSet: boolean
+  }
+  canva: {
+    clientIdSet: boolean
+    clientSecretSet: boolean
+    connected: boolean
+    account?: string
+  }
 }
 
 export type StreamEvent =

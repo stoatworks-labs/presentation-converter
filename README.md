@@ -12,7 +12,8 @@ Exporting a deck to PDF is easy. Every tool that does it throws the speaker note
 which is a problem if the PDF is what you actually present from. This tool exports the
 PDF *and* recovers the notes, mapped to the right page.
 
-- A **desktop GUI** — pick files, convert a whole folder, or leave a watch folder running.
+- A **desktop GUI** — pick files, convert a whole folder, or leave a watch folder running,
+  and connect a Google account from the Settings tab.
 - A **CLI and library** — the backend other programs drive, including
   [presentation-commander](https://github.com/allansargeant/presentation-commander-client),
   which reads the sidecars this produces.
@@ -116,16 +117,35 @@ Keynote cannot run on Linux, so a Linux host needs a paired Mac for `.key` files
 
 ### Google Slides
 
-Pass a share URL, a file id, or a `.gslides` shortcut. Credentials come from the
-environment — a service-account key is the right choice for a server:
+Pass a share URL, a file id, or a `.gslides` shortcut:
 
 ```bash
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 presentation-converter convert "https://docs.google.com/presentation/d/FILE_ID/edit" -o ~/PDFs
 ```
 
-Share the presentation with the service account's email address, and note that Drive
-refuses to export presentations over 10 MB.
+Connect an account first, either way round:
+
+**In the GUI** — run `presentation-converter serve`, open the **Settings** tab, and either
+sign in with Google or paste a service-account key. Credentials are stored in your user
+config directory with `0600` permissions; the page shows the exact path.
+
+**By environment variable** — best for servers, and takes precedence over anything saved
+in the GUI:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+```
+
+Either route needs the **Google Drive API** and **Google Slides API** enabled on the
+project. A service account can only see presentations that have been shared with its email
+address, and Drive refuses to export presentations over 10 MB.
+
+### Canva
+
+Not supported. Canva's Connect API can export PDF and PPTX, but exposes **no speaker-notes
+field** on designs, pages or exports — and notes are the point of this tool.
+[docs/canva.md](docs/canva.md) records what was checked, the one route that might work, and
+a five-minute test that would settle it.
 
 ## The sidecar
 
@@ -178,7 +198,7 @@ nominate. Install and configuration are in [docs/nextcloud.md](docs/nextcloud.md
 ## Repository layout
 
 ```
-packages/core     conversion engines, notes extraction, sidecar, batch, watch
+packages/core     conversion engines, notes extraction, sidecar, batch, watch, settings
 packages/cli      the presentation-converter binary
 packages/server   HTTP API, progress stream, GUI host, macOS worker endpoint
 packages/web      the browser GUI
@@ -198,11 +218,15 @@ npm run dev         # server + GUI
 
 Verified end to end on macOS against real Keynote-authored fixtures: `.key` and `.pptx`
 conversion, hidden-slide page mapping, folder batches with tree mirroring, incremental
-re-runs, output-collision detection, the GUI, and the worker endpoint.
+re-runs, output-collision detection, the watch folder, the GUI, and the worker endpoint.
+The settings and OAuth endpoints are verified too — credential storage and `0600`
+permissions, redaction (no secret is ever returned to the browser), forged-`state`
+rejection, and the generated consent URL.
 
-Not yet exercised against a live server: the Nextcloud app (written but never run — see
+Not yet exercised against a live service: the Nextcloud app (written but never run — see
 [docs/nextcloud.md](docs/nextcloud.md)), the LibreOffice engine (no LibreOffice on the
-development machine), and Google Slides (needs credentials).
+development machine), and a full Google OAuth round trip or Slides conversion, which needs
+real Google credentials and a human at the consent screen.
 
 ## Licence
 

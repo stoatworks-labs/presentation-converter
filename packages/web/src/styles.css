@@ -447,3 +447,91 @@ button.danger {
   font-size: 12px;
   margin-top: 6px;
 }
+
+/* --- settings ---------------------------------------------------------- */
+
+.conn-status {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background: var(--panel-alt);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.conn-status .dot {
+  flex: 0 0 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-top: 6px;
+  background: var(--muted);
+}
+
+.conn-status.ok .dot {
+  background: var(--ok);
+}
+
+.conn-status .reason {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+.conn-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.conn-actions button {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.ok-banner {
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+  border: 1px solid var(--ok);
+  color: var(--ok);
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.code-block {
+  display: block;
+  padding: 9px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+input[type='password'],
+textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  resize: vertical;
+}
+
+input[type='password']:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.panel a {
+  color: var(--accent);
+}

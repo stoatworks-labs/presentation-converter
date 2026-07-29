@@ -15,6 +15,7 @@ import {
 } from '@presentation-converter/core'
 import { JobManager } from './jobs.js'
 import { browse, describePath } from './browse.js'
+import { registerSettingsRoutes, PUBLIC_SETTINGS_PATHS } from './settingsRoutes.js'
 
 export { JobManager, type Job } from './jobs.js'
 
@@ -74,6 +75,13 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   if (options.token) {
     const expected = options.token
     app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+      // The OAuth callback is reached by a browser redirect from Google, which
+      // cannot attach an Authorization header. It is protected by its
+      // single-use `state` parameter instead.
+      if (PUBLIC_SETTINGS_PATHS.includes(req.baseUrl + req.path) || PUBLIC_SETTINGS_PATHS.includes(req.originalUrl.split('?')[0] ?? '')) {
+        next()
+        return
+      }
       const header = req.header('authorization') ?? ''
       const supplied = header.startsWith('Bearer ') ? header.slice(7) : ''
       if (!supplied || !constantTimeEquals(supplied, expected)) {
@@ -83,6 +91,8 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       next()
     })
   }
+
+  registerSettingsRoutes(app)
 
   // ---- status -----------------------------------------------------------
   app.get('/api/status', async (_req, res) => {
