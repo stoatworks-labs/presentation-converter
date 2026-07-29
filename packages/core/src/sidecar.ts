@@ -12,6 +12,13 @@ import {
 
 export interface BuildSidecarInput {
   sourcePath: string
+  /**
+   * Overrides the recorded source filename.
+   *
+   * `basename` of a cloud URL is its last path segment — usually the useless
+   * word "edit" — so remote sources supply a real name here.
+   */
+  sourceFile?: string
   sourceFormat: PresentationFormat
   sourceModifiedAt?: Date
   sourceSizeBytes?: number
@@ -95,7 +102,7 @@ export function buildSidecar(input: BuildSidecarInput): NotesSidecar {
     generator: input.generator,
     convertedAt: (input.convertedAt ?? new Date()).toISOString(),
     source: {
-      file: basename(input.sourcePath),
+      file: input.sourceFile ?? basename(input.sourcePath),
       format: input.sourceFormat,
       ...(input.sourceModifiedAt ? { modifiedAt: input.sourceModifiedAt.toISOString() } : {}),
       ...(input.sourceSizeBytes !== undefined ? { sizeBytes: input.sourceSizeBytes } : {}),

@@ -54,19 +54,29 @@ Nextcloud app. Public repo, MIT (the Nextcloud app is AGPL, as Nextcloud apps mu
   means "keep the stored one", so the GUI can avoid echoing it.
 
 ## Canva
-**Canva decks already convert**: its *Download → PPTX* export embeds notes in the standard
-OOXML notes parts, so the existing `package-xml` engine reads them with no new code.
-Verified against a real export, kept as `packages/core/test/fixtures/canva-export.pptx` —
-don't delete it; it's what stops a refactor silently losing Canva notes.
+Implemented, both routes: a manual *Download → PPTX* export (no setup), and the Connect API
+(convert from a Canva URL). See `docs/canva.md`.
 
-Only the Connect API automation (convert straight from a Canva URL) is unimplemented; see
-`docs/canva.md`. Note the Connect API exposes **no** notes field, so any Canva engine must
-fetch PPTX, never PDF alone.
+- The engine exports **PPTX, never PDF**, and renders it locally. Canva's API has no notes
+  field, so a PPTX is needed regardless; one artefact halves the API cost and guarantees
+  notes and pages match. Don't "optimise" this into a direct PDF export.
+- **Canva mandates PKCE/S256**, and **rotates refresh tokens** — each refresh invalidates
+  the old one, so the replacement is persisted immediately. Miss that and the integration
+  works exactly once.
+- **No service account exists** for Canva, so headless use needs a stored user token.
+- `packages/core/test/fixtures/canva-export.pptx` is a real export — don't delete it; it's
+  what stops a refactor silently losing Canva notes.
+- **Canva writes no `<p:ph>` placeholders at all.** `titleOf()` falls back to the slide's
+  first line of text, but only when a deck uses no placeholders anywhere — where
+  placeholders exist and none is a title, the author genuinely has no title and guessing
+  from body text would be worse.
 
-**Canva writes no `<p:ph>` placeholders at all.** `titleOf()` therefore falls back to the
-slide's first line of text, but only when a deck uses no placeholders anywhere — where
-placeholders exist and none is a title, the author genuinely has no title and guessing from
-body text would be worse.
+## Cloud sources are URLs, not paths
+`formatForSource()` (not `formatForPath()`) is the entry point for anything user-supplied.
+Extension matching alone returns undefined for a Google/Canva URL, which silently rejected
+them as "not a presentation" — that was a real shipped bug. Related: remote formats can't
+be incremental (no local mtime), never appear in folder scans or watch folders, and get
+their output named from the deck title via `PdfRenderResult.suggestedName`.
 
 ## Verification status
 Verified on macOS against real Keynote-authored fixtures: `.key`/`.pptx` conversion,

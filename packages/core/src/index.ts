@@ -61,7 +61,28 @@ export { extractPptxNotes } from './notes/ooxml.js'
 export { extractOdpNotes } from './notes/odf.js'
 
 export {
+  resolveCanvaDesignId,
+  resolveCanvaCredentials,
+  canvaCredentialsFromEnv,
+  buildCanvaAuthUrl,
+  createCanvaPkce,
+  exchangeCanvaCode,
+  getCanvaAccessToken,
+  fetchCanvaAccount,
+  verifyCanvaCredentials,
+  resetCanvaTokenCache,
+  clearCanvaDownloads,
+  exportCanvaDesign,
+  isCanvaUsable,
+  CANVA_SCOPES,
+  type CanvaCredentials,
+  type CanvaPkce,
+  type CanvaTokenExchange
+} from './engines/canva.js'
+
+export {
   formatForPath,
+  formatForSource,
   isPresentation,
   pdfPathFor,
   sidecarPathFor,

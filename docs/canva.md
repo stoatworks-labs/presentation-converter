@@ -1,99 +1,105 @@
 # Canva
 
-**Canva presentations convert today, notes included — via a manual PPTX export.**
-Automating the download through Canva's Connect API is the remaining work, and is now a
-well-understood job rather than a gamble.
+Canva presentations convert to PDF **with their speaker notes**, two ways:
 
-Assessed July 2026 against the official [Canva Connect API docs](https://www.canva.dev/docs/connect/)
-and **verified against a real Canva PPTX export**.
-
-## What works right now, with no new code
-
-Canva's *Download → PPTX* export embeds speaker notes in the standard OOXML
-`ppt/notesSlides/` parts, so this tool's existing `package-xml` notes engine reads them
-unchanged:
+1. **Manually** — export from Canva with *Download → PPTX* and convert that file. Works
+   with no setup at all.
+2. **Directly from a Canva link** — connect a Canva account once, then pass the design URL.
 
 ```bash
-presentation-converter convert "This is a slide.pptx"
+presentation-converter convert "https://www.canva.com/design/DAFxyz123/edit" -o ~/PDFs
 ```
 
-```jsonc
-{
-  "slideCount": 1,
-  "engines": { "pdf": "keynote", "notes": "ooxml" },
-  "alignment": "exact",
-  "notes": { "1": "this is a note" }
-}
+## Why it works at all
+
+Canva's Connect API exposes **no speaker-notes field** anywhere — not on
+[designs](https://www.canva.dev/docs/connect/api-reference/designs/get-design/), not on
+[design pages](https://www.canva.dev/docs/connect/api-reference/designs/get-design-pages/),
+and not as an [export](https://www.canva.dev/docs/connect/api-reference/exports/create-design-export-job/)
+option. Unlike Google Slides, whose API hands over `slideProperties.notesPage` directly,
+Canva notes are reachable *only* inside a PPTX export.
+
+Fortunately Canva's PPTX **does** embed notes in the standard OOXML `ppt/notesSlides/`
+parts — verified against a real export, kept as
+`packages/core/test/fixtures/canva-export.pptx` — so the existing `package-xml` extractor
+reads them unchanged.
+
+## How the engine works
+
+The Canva engine deliberately exports **PPTX only, never PDF**, even though Canva can
+produce PDF directly:
+
+1. Export the design as PPTX (async: create job → poll → download).
+2. Render *that file* to PDF locally, via LibreOffice or Keynote.
+3. Read the notes from the same file.
+4. Reconcile slides against PDF pages exactly as every other format does.
+
+Two reasons for taking the PDF from the PPTX rather than asking Canva for one:
+
+- **Half the API calls.** Canva's export quota is roughly 75 per 5 minutes and 500 per day
+  per user; two exports per deck would halve the number of decks you can convert.
+- **Pages and notes always agree.** Two separate exports could straddle an edit, leaving
+  notes describing a deck that the pages no longer match. One artefact cannot.
+
+The downloaded PPTX is cached briefly (5 minutes, keyed by design id) so a single
+conversion exports once rather than twice.
+
+## Connecting an account
+
+Optional — only needed for converting from a URL.
+
+1. Create an integration in the [Canva developer portal](https://www.canva.com/developers/integrations)
+   with the `design:content:read` and `design:meta:read` scopes.
+2. Add the redirect URL shown on the Settings page, e.g.
+   `http://127.0.0.1:4747/api/canva/callback`.
+3. Paste the client id and secret into **Settings → Canva**, then **Connect**.
+
+Or set the environment variables, which take precedence:
+
+```bash
+export PRESENTATION_CONVERTER_CANVA_CLIENT_ID=...
+export PRESENTATION_CONVERTER_CANVA_CLIENT_SECRET=...
+export PRESENTATION_CONVERTER_CANVA_REFRESH_TOKEN=...
 ```
 
-Verified on a real export (`packages/core/test/fixtures/canva-export.pptx`, covered by
-`test/ooxml.test.ts`). This was the open question in the original assessment, and the
-answer is **yes — Canva's PPTX carries the notes.**
+### Two things that will bite you if changed
 
-### One quirk worth knowing
+- **Canva mandates PKCE** with SHA-256. A plain code challenge is rejected outright.
+- **Canva rotates refresh tokens.** Every refresh returns a *new* token and invalidates the
+  old one, so the replacement is written straight back to the settings store. Skip that and
+  the integration works exactly once, then locks the account out until someone reconnects
+  by hand.
 
-Canva writes slides as plain shapes with **no `<p:ph>` placeholders at all**. Every other
-exporter marks its title with a `title`/`ctrTitle` placeholder, so titles came back empty
-for Canva decks until the extractor learned to fall back to the slide's first line of text
-when a deck uses no placeholders anywhere. Notes were never affected — only the
-cosmetic `title` field.
+## Limits and caveats
 
-## What the Connect API would add
-
-Automation: converting straight from a Canva URL or a Canva folder, instead of downloading
-by hand first.
-
-[Create design export job](https://www.canva.dev/docs/connect/api-reference/exports/create-design-export-job/)
-supports **PDF** and **PPTX** (plus PNG, JPG, GIF, MP4, CSV, HTML). So a Canva engine would:
-
-1. `POST` an export job for **PPTX** → notes, via the existing OOXML extractor.
-2. Either export **PDF** separately for the pages, or render the PPTX locally.
-3. Reconcile against the PDF page count exactly as every other format does.
-
-### Why no notes come from the API itself
-
-Checked directly — no endpoint exposes speaker notes:
-
-| Endpoint | Returns | Notes? |
-| --- | --- | --- |
-| [Get design](https://www.canva.dev/docs/connect/api-reference/designs/get-design/) | design metadata, thumbnail, URLs | no |
-| [Get design pages](https://www.canva.dev/docs/connect/api-reference/designs/get-design-pages/) | page number, dimensions, thumbnail | no |
-| [Create export job](https://www.canva.dev/docs/connect/api-reference/exports/create-design-export-job/) | export formats and options | no notes option |
-
-Unlike Google Slides, whose API hands over `slideProperties.notesPage` directly, Canva
-notes are reachable *only* through the PPTX file. That is fine — it is the route that
-works — but it means a Canva engine must always fetch PPTX, never PDF alone.
-
-## What implementing it involves
-
-- **Auth.** OAuth 2.0 with PKCE, and an integration registered in Canva's developer portal.
-  Canva has **no service-account equivalent**, so unattended use — the Nextcloud case —
-  means storing a user refresh token and refreshing it. The `SettingsStore` already has a
-  `canva` slot shaped for this.
-- **Async exports.** Unlike Drive's synchronous export, Canva needs create-then-poll. The
-  `PdfEngine.render` contract already tolerates this (it is async and takes an
-  `AbortSignal`).
-- **Two exports per deck**, if PDF comes from Canva too — doubling cost against the rate
-  limits below. Rendering the PPTX locally with LibreOffice instead halves the API cost and
-  guarantees the PDF and the notes come from the same artefact, which makes the page
-  mapping more trustworthy. Probably the better design.
-- **Rate limits.** Roughly 75 exports per user per 5 minutes and 500 per day.
+- **No service account.** Canva offers OAuth only, so unattended use — the Nextcloud case —
+  means storing a user's refresh token and keeping it rotated. There is no machine identity
+  to use instead.
 - **No local files.** Canva has no local format, so the watch folder and the Nextcloud
-  scanner have nothing to pick up. Canva decks must be addressed by URL/id or enumerated
-  from a Canva folder — a different interaction model from every other format here.
+  scanner have nothing to pick up. Canva decks must be named by URL or id.
+- **A local pptx renderer is still required.** The engine renders the exported PPTX itself,
+  so it needs LibreOffice (any platform) or Keynote (macOS). Without one it fails with that
+  explicit message rather than a confusing engine error.
+- **Rate limits** — roughly 75 exports per user per 5 minutes, 500 per day.
+- **Output naming.** A design id makes a poor filename, so the PDF is named after the
+  deck's Canva title where `design:meta:read` allows it (falling back to the id), unless you
+  passed an explicit output path.
 
-## Recommendation
+## Verification status
 
-Worth doing. The risk that killed the original assessment is gone: notes demonstrably
-survive the PPTX export, and the parsing side is already built and tested.
+Verified without a Canva account: PKCE generation (challenge is `base64url(sha256(verifier))`,
+fresh per attempt), the authorisation URL's parameters and scopes, design-id parsing from
+every URL form, credential storage at mode 0600 with no secret returned to the browser,
+forged-`state` rejection, and notes extraction from a real Canva PPTX export.
 
-Suggested shape: a `canva` engine that exports **PPTX only**, renders the PDF locally via
-LibreOffice, and reuses `package-xml` for notes — one API call per deck, one artefact, and
-notes and pages guaranteed to agree.
+**Not verified:** the live round trip — OAuth handshake, export job, download and refresh
+rotation — which needs a real Canva integration and a human at the consent screen.
 
 ## Sources
 
 - [Canva Connect APIs](https://www.canva.dev/docs/connect/)
+- [Authentication](https://www.canva.dev/docs/connect/authentication/)
+- [Generate an access token](https://www.canva.dev/docs/connect/api-reference/authentication/generate-access-token/)
 - [Create design export job](https://www.canva.dev/docs/connect/api-reference/exports/create-design-export-job/)
-- [Get design pages](https://www.canva.dev/docs/connect/api-reference/designs/get-design-pages/)
-- [Designs endpoints](https://www.canva.dev/docs/connect/api-reference/designs/)
+- [Get design export job](https://www.canva.dev/docs/connect/api-reference/exports/get-design-export-job/)
+- [Scopes](https://www.canva.dev/docs/connect/appendix/scopes/)

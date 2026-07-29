@@ -4,6 +4,199 @@ import { api, type RedactedSettings } from '../api'
 type Mode = 'oauth' | 'service-account'
 
 /**
+ * Canva account setup.
+ *
+ * OAuth only — Canva has no service-account equivalent, so unattended use means
+ * a stored user refresh token and nothing else.
+ */
+function CanvaPanel({
+  settings,
+  onChanged
+}: {
+  settings: RedactedSettings | null
+  onChanged: (settings: RedactedSettings) => void
+}): JSX.Element {
+  const [clientId, setClientId] = useState('')
+  const [clientSecret, setClientSecret] = useState('')
+  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null)
+  const [busy, setBusy] = useState(false)
+  const pollTimer = useRef<number | null>(null)
+
+  useEffect(
+    () => () => {
+      if (pollTimer.current !== null) window.clearInterval(pollTimer.current)
+    },
+    []
+  )
+
+  const canva = settings?.canva
+  const act = async (run: () => Promise<RedactedSettings | void>, ok?: string): Promise<void> => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      const updated = await run()
+      if (updated) onChanged(updated)
+      if (ok) setMessage({ text: ok, error: false })
+    } catch (error) {
+      setMessage({ text: error instanceof Error ? error.message : String(error), error: true })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const connect = async (): Promise<void> => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      const { url } = await api.canvaConnect(window.location.origin)
+      window.open(url, '_blank', 'noopener')
+      setMessage({
+        text: 'Approve access in the tab that just opened, then come back — this page will update on its own.',
+        error: false
+      })
+
+      if (pollTimer.current !== null) window.clearInterval(pollTimer.current)
+      let elapsed = 0
+      pollTimer.current = window.setInterval(() => {
+        elapsed += 2
+        void api
+          .settings()
+          .then((current) => {
+            onChanged(current)
+            if (current.canva.connected || elapsed > 300) {
+              if (pollTimer.current !== null) window.clearInterval(pollTimer.current)
+              pollTimer.current = null
+              if (current.canva.connected) setMessage({ text: 'Connected.', error: false })
+            }
+          })
+          .catch(() => undefined)
+      }, 2000)
+    } catch (error) {
+      setMessage({ text: error instanceof Error ? error.message : String(error), error: true })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="panel">
+      <h2>Canva</h2>
+
+      <div className={`conn-status ${canva?.connected ? 'ok' : ''}`}>
+        <span className="dot" aria-hidden="true" />
+        <div>
+          <strong>{canva?.connected ? 'Connected' : 'Not connected'}</strong>
+          <div className="reason">
+            {canva?.connected
+              ? canva.account
+                ? `Signed in as ${canva.account}`
+                : 'Canva account connected'
+              : 'Connect an account to convert straight from a Canva link.'}
+          </div>
+        </div>
+        {canva?.connected && (
+          <div className="conn-actions">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void act(async () => {
+                const result = await api.canvaTest()
+                setMessage({
+                  text: result.ok
+                    ? `Working${result.account ? ` — signed in as ${result.account}` : ''}.`
+                    : (result.error ?? 'Could not reach Canva.'),
+                  error: !result.ok
+                })
+                return api.settings()
+              })}
+            >
+              Test
+            </button>
+            <button
+              type="button"
+              className="danger"
+              disabled={busy}
+              onClick={() => void act(() => api.canvaDisconnect(), 'Disconnected.')}
+            >
+              Disconnect
+            </button>
+          </div>
+        )}
+      </div>
+
+      {message && <div className={message.error ? 'error-banner' : 'ok-banner'}>{message.text}</div>}
+
+      <p className="hint" style={{ margin: '14px 0 12px' }}>
+        Optional. <strong>Canva decks already convert without this</strong> — in Canva choose{' '}
+        <em>Download → PPTX</em> and convert that file; the speaker notes are inside it. Connecting
+        an account only saves you the manual download, letting you convert from a Canva link
+        directly.
+      </p>
+      <p className="hint" style={{ marginBottom: 12 }}>
+        Create an integration in the{' '}
+        <a href="https://www.canva.com/developers/integrations" target="_blank" rel="noreferrer">
+          Canva developer portal
+        </a>{' '}
+        with the <code>design:content:read</code> and <code>design:meta:read</code> scopes, and add
+        this redirect URL to it:
+      </p>
+      <code className="code-block">{window.location.origin}/api/canva/callback</code>
+
+      <div className="field" style={{ marginTop: 12 }}>
+        <label htmlFor="c-client-id">Client ID</label>
+        <input
+          id="c-client-id"
+          type="text"
+          value={clientId}
+          spellCheck={false}
+          placeholder={canva?.clientIdSet ? '(saved — type to replace)' : 'OC-AZ…'}
+          onChange={(e) => setClientId(e.target.value)}
+        />
+      </div>
+
+      <div className="field">
+        <label htmlFor="c-client-secret">Client secret</label>
+        <input
+          id="c-client-secret"
+          type="password"
+          value={clientSecret}
+          autoComplete="new-password"
+          placeholder={canva?.clientSecretSet ? '(saved — leave blank to keep)' : 'cnvca…'}
+          onChange={(e) => setClientSecret(e.target.value)}
+        />
+      </div>
+
+      <div className="actions">
+        <button
+          type="button"
+          disabled={busy || !clientId.trim()}
+          onClick={() =>
+            void act(async () => {
+              const updated = await api.saveCanvaSettings({ clientId, clientSecret })
+              setClientSecret('')
+              return updated
+            }, 'Client credentials saved.')
+          }
+        >
+          Save client
+        </button>
+        <button
+          type="button"
+          className="primary"
+          disabled={busy || !canva?.clientIdSet || !canva?.clientSecretSet}
+          onClick={() => void connect()}
+        >
+          {canva?.connected ? 'Reconnect' : 'Connect Canva account'}
+        </button>
+      </div>
+      {(!canva?.clientIdSet || !canva?.clientSecretSet) && (
+        <p className="hint">Save a client id and secret before connecting.</p>
+      )}
+    </div>
+  )
+}
+
+/**
  * Google account setup.
  *
  * Two routes, because they suit different deployments: the OAuth flow signs in
@@ -280,18 +473,7 @@ export function Settings(): JSX.Element {
         )}
       </div>
 
-      <div className="panel">
-        <h2>Canva</h2>
-        <p className="hint">
-          <strong>Canva decks already work — no account needed here.</strong> In Canva choose{' '}
-          <em>Download → PPTX</em>, then convert that file like any other PowerPoint deck. Canva
-          embeds the speaker notes in it, so they come through in the sidecar.
-        </p>
-        <p className="hint">
-          Converting straight from a Canva URL would need Canva&rsquo;s Connect API, which is not
-          implemented yet — see <code>docs/canva.md</code>.
-        </p>
-      </div>
+      <CanvaPanel settings={settings} onChanged={setSettings} />
 
       {settings && (
         <div className="panel">

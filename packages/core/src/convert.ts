@@ -1,16 +1,99 @@
-import { mkdir, stat } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { mkdir, stat, rename } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
 import { pdfEngineFor, notesEngineFor, NoEngineError } from './engines/registry.js'
 import { buildSidecar, writeSidecar } from './sidecar.js'
 import { pdfPageCount } from './pdf.js'
 import { GENERATOR } from './version.js'
 import {
-  formatForPath,
+  formatForSource,
   pdfPathFor,
   sidecarPathFor,
-  outputsAreFresh
+  outputsAreFresh,
+  stemOf
 } from './util/paths.js'
-import type { ConversionResult, ConvertOptions, ProgressEvent } from './types.js'
+import { isRemoteFormat } from './types.js'
+import type {
+  ConversionResult,
+  ConvertOptions,
+  PresentationFormat,
+  ProgressEvent
+} from './types.js'
+
+/**
+ * Where a converted deck's PDF belongs.
+ *
+ * A cloud source is a URL, not a path, so `dirname` of it is meaningless — the
+ * output goes to `outputDir` (or the working directory) under a name derived
+ * from the deck rather than from the URL's last path segment, which for Canva
+ * and Google is usually the useless word "edit".
+ */
+function remoteAwarePdfPath(
+  source: string,
+  format: PresentationFormat,
+  outputDir?: string
+): string {
+  if (!isRemoteFormat(format)) return pdfPathFor(source, outputDir)
+  const name = `${remoteStem(source, format)}.pdf`
+  return outputDir ? join(outputDir, name) : join(process.cwd(), name)
+}
+
+/**
+ * Strips characters that are illegal or awkward in a filename.
+ *
+ * A Canva or Slides title is free text and can contain slashes, colons and
+ * newlines, none of which belong in a path.
+ */
+function safeFilename(name: string): string {
+  return name
+    .replace(/[/\\:*?"<>|\u0000-\u001f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^\.+/, '')
+    .slice(0, 120)
+    .trim()
+}
+
+/**
+ * Renames a freshly written PDF to the deck's real title.
+ *
+ * Returns the new path, or undefined when the rename was skipped — an unusable
+ * title, or a name already taken by something else. Failing to rename is never
+ * worth failing a conversion over, so every problem here is non-fatal.
+ */
+async function renameToTitle(pdfPath: string, title: string): Promise<string | undefined> {
+  const safe = safeFilename(title)
+  if (!safe) return undefined
+
+  const target = join(dirname(pdfPath), `${safe}.pdf`)
+  if (target === pdfPath) return undefined
+
+  try {
+    await stat(target)
+    // Something already occupies the title; keep the id-based name rather than
+    // overwrite a file this conversion did not create.
+    return undefined
+  } catch {
+    // Free — proceed.
+  }
+
+  try {
+    await rename(pdfPath, target)
+    return target
+  } catch {
+    return undefined
+  }
+}
+
+/** A filesystem-safe name for a cloud deck, from its id. */
+function remoteStem(source: string, format: PresentationFormat): string {
+  const id =
+    format === 'canva'
+      ? source.match(/canva\.com\/design\/([A-Za-z0-9_-]+)/i)?.[1]
+      : source.match(/\/presentation\/d\/([A-Za-z0-9_-]+)/)?.[1]
+  if (id) return id
+  const fallback = stemOf(source).replace(/[^A-Za-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '')
+  return fallback || 'presentation'
+}
 
 /**
  * Converts one presentation to PDF plus a notes sidecar.
@@ -36,7 +119,9 @@ export async function convertFile(options: ConvertOptions): Promise<ConversionRe
     ...result
   })
 
-  const format = formatForPath(sourcePath)
+  // URL-aware: a Google Slides or Canva link has no meaningful extension, so
+  // extension matching alone would reject it as "not a presentation".
+  const format = formatForSource(sourcePath)
   if (!format) {
     report({ phase: 'failed', message: 'Unrecognised file type' })
     return finish({
@@ -45,13 +130,13 @@ export async function convertFile(options: ConvertOptions): Promise<ConversionRe
     })
   }
 
-  const pdfPath = options.outputPath ?? pdfPathFor(sourcePath, options.outputDir)
-  const sidecarPath = sidecarPathFor(pdfPath)
+  let pdfPath = options.outputPath ?? remoteAwarePdfPath(sourcePath, format, options.outputDir)
+  let sidecarPath = sidecarPathFor(pdfPath)
   const wantSidecar = options.skipSidecar !== true
 
-  // Google Slides sources are remote, so freshness cannot be judged from an
-  // mtime on disk and an incremental run would skip decks that had changed.
-  const incremental = options.incremental !== false && format !== 'google-slides'
+  // Cloud sources have no local mtime to compare against, so an incremental
+  // run cannot tell a changed deck from an unchanged one and must always fetch.
+  const incremental = options.incremental !== false && !isRemoteFormat(format)
   if (incremental) {
     const outputs = wantSidecar ? [pdfPath, sidecarPath] : [pdfPath]
     if (await outputsAreFresh(sourcePath, outputs)) {
@@ -73,12 +158,23 @@ export async function convertFile(options: ConvertOptions): Promise<ConversionRe
     await mkdir(dirname(pdfPath), { recursive: true })
 
     report({ phase: 'rendering', message: pdfEngine.label })
-    await pdfEngine.render({
+    const rendered = await pdfEngine.render({
       sourcePath,
       outputPath: pdfPath,
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.signal ? { signal: options.signal } : {})
     })
+
+    // A cloud deck is addressed by id, so the output would be called something
+    // like `DAFxyz123.pdf`. If the engine learned the deck's real title while
+    // fetching it, use that — but never override a path the caller chose.
+    if (rendered.suggestedName && !options.outputPath) {
+      const renamed = await renameToTitle(pdfPath, rendered.suggestedName)
+      if (renamed) {
+        pdfPath = renamed
+        sidecarPath = sidecarPathFor(renamed)
+      }
+    }
 
     const pageCount = await pdfPageCount(pdfPath)
 
@@ -100,9 +196,17 @@ export async function convertFile(options: ConvertOptions): Promise<ConversionRe
 
     report({ phase: 'writing-sidecar' })
     const info = await stat(sourcePath).catch(() => undefined)
+    const remoteId = isRemoteFormat(format) ? remoteStem(sourcePath, format) : undefined
+
     const sidecar = buildSidecar({
       sourcePath,
       sourceFormat: format,
+      // For a cloud deck, record the title (or failing that the id) rather than
+      // the URL's last path segment, and keep the id so the source can be found
+      // again. `source.format` already says which service it came from.
+      ...(remoteId
+        ? { sourceFile: rendered.suggestedName ?? remoteId, remoteId }
+        : {}),
       ...(info ? { sourceModifiedAt: info.mtime, sourceSizeBytes: info.size } : {}),
       pdfPath,
       pdfPageCount: pageCount,

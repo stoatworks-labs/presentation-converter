@@ -5,7 +5,7 @@
 > and the design decisions recorded below. Review it yourself before relying on it in
 > production, same as you would for any code.
 
-Converts Keynote, PowerPoint, Google Slides and OpenDocument presentations to PDF —
+Converts Keynote, PowerPoint, Google Slides, Canva and OpenDocument presentations to PDF —
 **and keeps the presenter notes**, in a `.notes.json` sidecar written next to each PDF.
 
 Exporting a deck to PDF is easy. Every tool that does it throws the speaker notes away,
@@ -13,7 +13,7 @@ which is a problem if the PDF is what you actually present from. This tool expor
 PDF *and* recovers the notes, mapped to the right page.
 
 - A **desktop GUI** — pick files, convert a whole folder, or leave a watch folder running,
-  and connect a Google account from the Settings tab.
+  and connect Google or Canva accounts from the Settings tab.
 - A **CLI and library** — the backend other programs drive, including
   [presentation-commander](https://github.com/allansargeant/presentation-commander-client),
   which reads the sidecars this produces.
@@ -90,7 +90,7 @@ Everything takes `--json` for scripting, and exits non-zero if any file failed.
 | `--flat` | don't mirror subfolders — everything lands in one directory |
 | `--force` | reconvert even when the output is already newer than the source |
 | `--no-sidecar` | write only the PDF |
-| `--pdf-engine <id>` | force `keynote`, `libreoffice` or `google-slides` |
+| `--pdf-engine <id>` | force `keynote`, `libreoffice`, `google-slides` or `canva` |
 | `--exclude <text...>` | skip any path containing this text |
 | `--dry-run` | (batch) list what would be converted, then stop |
 
@@ -111,6 +111,7 @@ no application installed.
 | `.ppt` | LibreOffice | promoted to `.pptx`, then the package |
 | `.odp` | LibreOffice | the `.odp` package (ODF) |
 | Google Slides | Drive export | Slides API |
+| Canva | PPTX export, rendered locally | the exported `.pptx` (OOXML) |
 
 Keynote cannot run on Linux, so a Linux host needs a paired Mac for `.key` files — see
 [the Nextcloud notes](docs/nextcloud.md).
@@ -142,18 +143,19 @@ address, and Drive refuses to export presentations over 10 MB.
 
 ### Canva
 
-**Canva decks convert today, notes and all** — export from Canva with *Download → PPTX*,
-then convert it like any other PowerPoint file:
+Convert straight from a Canva link, once an account is connected in **Settings → Canva**:
 
 ```bash
-presentation-converter convert "My Canva Deck.pptx"
+presentation-converter convert "https://www.canva.com/design/DAFxyz123/edit" -o ~/PDFs
 ```
 
-Canva embeds speaker notes in the standard OOXML notes parts, so the normal `.pptx` path
-picks them up. Verified against a real Canva export, which ships as a test fixture.
+Or with no setup at all: export from Canva with *Download → PPTX* and convert that file
+like any other PowerPoint deck — Canva embeds the speaker notes in it.
 
-Converting straight from a Canva URL — automating that download through Canva's Connect
-API — is not implemented yet. [docs/canva.md](docs/canva.md) has the design.
+The engine exports **PPTX, never PDF**, and renders that file locally. Canva's API exposes
+no notes field, so a PPTX has to be fetched anyway; taking the pages from the same artefact
+halves the API cost and guarantees the notes and the pages describe the same version of the
+deck. That does mean LibreOffice or Keynote is required. See [docs/canva.md](docs/canva.md).
 
 ## The sidecar
 
@@ -231,10 +233,13 @@ The settings and OAuth endpoints are verified too — credential storage and `06
 permissions, redaction (no secret is ever returned to the browser), forged-`state`
 rejection, and the generated consent URL.
 
+Canva is verified as far as it can be without an account: notes extraction from a real
+Canva PPTX export, PKCE generation, the authorisation URL, and design-id parsing.
+
 Not yet exercised against a live service: the Nextcloud app (written but never run — see
 [docs/nextcloud.md](docs/nextcloud.md)), the LibreOffice engine (no LibreOffice on the
-development machine), and a full Google OAuth round trip or Slides conversion, which needs
-real Google credentials and a human at the consent screen.
+development machine), and full OAuth round trips for Google or Canva — each needs real
+credentials and a human at the consent screen.
 
 ## Licence
 

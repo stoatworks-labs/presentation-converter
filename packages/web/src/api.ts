@@ -114,7 +114,27 @@ export const api = {
     }),
 
   googleDisconnect: () =>
-    request<RedactedSettings>('/api/google/disconnect', { method: 'POST' })
+    request<RedactedSettings>('/api/google/disconnect', { method: 'POST' }),
+
+  saveCanvaSettings: (patch: { clientId?: string; clientSecret?: string }) =>
+    request<RedactedSettings>('/api/settings/canva', {
+      method: 'PUT',
+      body: JSON.stringify(patch)
+    }),
+
+  canvaConnect: (origin: string) =>
+    request<{ url: string; redirectUri: string }>('/api/canva/connect', {
+      method: 'POST',
+      body: JSON.stringify({ origin })
+    }),
+
+  canvaTest: () =>
+    request<{ ok: boolean; account?: string; error?: string }>('/api/canva/test', {
+      method: 'POST'
+    }),
+
+  canvaDisconnect: () =>
+    request<RedactedSettings>('/api/canva/disconnect', { method: 'POST' })
 }
 
 export interface RedactedSettings {

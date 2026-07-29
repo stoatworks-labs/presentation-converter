@@ -7,6 +7,28 @@ export function formatForPath(path: string): PresentationFormat | undefined {
   return PRESENTATION_EXTENSIONS[extname(path).toLowerCase()]
 }
 
+/** Hosts whose URLs identify a cloud presentation. */
+const URL_FORMATS: Array<{ pattern: RegExp; format: PresentationFormat }> = [
+  { pattern: /docs\.google\.com\/presentation\//i, format: 'google-slides' },
+  { pattern: /(?:www\.)?canva\.com\/design\//i, format: 'canva' }
+]
+
+/**
+ * The format of anything a user can pass as a source: a file path, or a URL to
+ * a cloud presentation.
+ *
+ * Extension matching alone is not enough — a Google Slides or Canva URL has no
+ * meaningful extension, so `formatForPath` returns undefined for it and the
+ * conversion is rejected as "not a presentation". Every entry point should use
+ * this rather than `formatForPath`.
+ */
+export function formatForSource(source: string): PresentationFormat | undefined {
+  if (/^https?:\/\//i.test(source)) {
+    return URL_FORMATS.find((entry) => entry.pattern.test(source))?.format
+  }
+  return formatForPath(source)
+}
+
 export function isPresentation(path: string): boolean {
   return formatForPath(path) !== undefined && !isIgnoredFile(path)
 }

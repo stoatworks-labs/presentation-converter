@@ -2,6 +2,7 @@ import { keynoteEngine, keynoteNotesEngine } from './keynote.js'
 import { libreOfficeEngine } from './libreoffice.js'
 import { packageNotesEngine } from './documentNotes.js'
 import { googleSlidesEngine, googleSlidesNotesEngine } from './google.js'
+import { canvaEngine, canvaNotesEngine } from './canva.js'
 import type {
   EngineAvailability,
   NotesEngine,
@@ -9,11 +10,17 @@ import type {
   PresentationFormat
 } from '../types.js'
 
-export const PDF_ENGINES: PdfEngine[] = [libreOfficeEngine, keynoteEngine, googleSlidesEngine]
+export const PDF_ENGINES: PdfEngine[] = [
+  libreOfficeEngine,
+  keynoteEngine,
+  googleSlidesEngine,
+  canvaEngine
+]
 export const NOTES_ENGINES: NotesEngine[] = [
   keynoteNotesEngine,
   packageNotesEngine,
-  googleSlidesNotesEngine
+  googleSlidesNotesEngine,
+  canvaNotesEngine
 ]
 
 /**
@@ -28,7 +35,8 @@ const PDF_PREFERENCE: Record<PresentationFormat, string[]> = {
   pptx: ['libreoffice', 'keynote'],
   ppt: ['libreoffice', 'keynote'],
   odp: ['libreoffice'],
-  'google-slides': ['google-slides']
+  'google-slides': ['google-slides'],
+  canva: ['canva']
 }
 
 /**
@@ -42,7 +50,8 @@ const NOTES_PREFERENCE: Record<PresentationFormat, string[]> = {
   pptx: ['package-xml'],
   ppt: ['package-xml'],
   odp: ['package-xml'],
-  'google-slides': ['google-slides']
+  'google-slides': ['google-slides'],
+  canva: ['canva']
 }
 
 const probeCache = new Map<string, Promise<EngineAvailability>>()
@@ -170,7 +179,14 @@ export async function describeEngines(): Promise<EngineStatus[]> {
 
 /** Formats that can be converted end-to-end right now, for GUI messaging. */
 export async function supportedFormats(): Promise<PresentationFormat[]> {
-  const formats: PresentationFormat[] = ['keynote', 'pptx', 'ppt', 'odp', 'google-slides']
+  const formats: PresentationFormat[] = [
+    'keynote',
+    'pptx',
+    'ppt',
+    'odp',
+    'google-slides',
+    'canva'
+  ]
   const usable: PresentationFormat[] = []
   for (const format of formats) {
     try {

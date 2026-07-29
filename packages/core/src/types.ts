@@ -7,7 +7,25 @@
  */
 
 /** Source presentation formats we know how to handle. */
-export type PresentationFormat = 'keynote' | 'pptx' | 'ppt' | 'odp' | 'google-slides'
+export type PresentationFormat =
+  | 'keynote'
+  | 'pptx'
+  | 'ppt'
+  | 'odp'
+  | 'google-slides'
+  | 'canva'
+
+/**
+ * Formats that live in the cloud rather than on disk.
+ *
+ * These are addressed by URL or id, so they never appear in a folder scan or a
+ * watch folder, and their freshness cannot be judged from a local mtime.
+ */
+export const REMOTE_FORMATS: readonly PresentationFormat[] = ['google-slides', 'canva']
+
+export function isRemoteFormat(format: PresentationFormat): boolean {
+  return REMOTE_FORMATS.includes(format)
+}
 
 export const PRESENTATION_EXTENSIONS: Record<string, PresentationFormat> = {
   '.key': 'keynote',
@@ -120,6 +138,15 @@ export interface PdfRenderResult {
   /** Absolute path to the produced PDF. */
   pdfPath: string
   engine: string
+  /**
+   * A better basename for the output, without extension.
+   *
+   * Cloud sources are addressed by id, so the output would otherwise be called
+   * something like `DAFxyz123.pdf`. An engine that learns the deck's real title
+   * while fetching it reports it here, and the conversion renames the output —
+   * but only when the caller did not specify an explicit output path.
+   */
+  suggestedName?: string
 }
 
 export interface EngineAvailability {

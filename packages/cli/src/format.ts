@@ -15,6 +15,9 @@ export const red = (text: string): string => paint('31', text)
 export const cyan = (text: string): string => paint('36', text)
 
 export function shortPath(path: string): string {
+  // A cloud source is a URL, not a path. `relative` resolves it against the
+  // working directory and mangles it into "https:/host/..." — show it as-is.
+  if (/^https?:\/\//i.test(path)) return path
   const rel = relative(process.cwd(), path)
   return rel && !rel.startsWith('..') ? rel : path
 }

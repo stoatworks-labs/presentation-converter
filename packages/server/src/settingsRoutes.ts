@@ -9,7 +9,13 @@ import {
   verifyGoogleCredentials,
   resolveGoogleCredentials,
   resetGoogleTokenCache,
-  resetEngineProbes
+  resetEngineProbes,
+  buildCanvaAuthUrl,
+  createCanvaPkce,
+  exchangeCanvaCode,
+  fetchCanvaAccount,
+  verifyCanvaCredentials,
+  resetCanvaTokenCache
 } from '@presentation-converter/core'
 
 /**
@@ -20,9 +26,11 @@ import {
  * finds nothing and is rejected.
  */
 interface PendingAuth {
-  provider: 'google'
+  provider: 'google' | 'canva'
   redirectUri: string
   createdAt: number
+  /** PKCE verifier — Canva only, where PKCE is mandatory. */
+  codeVerifier?: string
 }
 const pending = new Map<string, PendingAuth>()
 
@@ -62,7 +70,7 @@ function resultPage(title: string, detail: string, ok: boolean): string {
  * Authorization header. The callback is protected by the single-use `state`
  * instead.
  */
-export const PUBLIC_SETTINGS_PATHS = ['/api/google/callback']
+export const PUBLIC_SETTINGS_PATHS = ['/api/google/callback', '/api/canva/callback']
 
 export function registerSettingsRoutes(app: Express): void {
   // ---- read -------------------------------------------------------------
@@ -222,6 +230,140 @@ export function registerSettingsRoutes(app: Express): void {
   app.post('/api/google/disconnect', async (_req, res) => {
     await settingsStore.clear('google')
     resetGoogleTokenCache()
+    resetEngineProbes()
+    res.json(await redactedSettings())
+  })
+
+  // ---- Canva ------------------------------------------------------------
+  app.put('/api/settings/canva', async (req, res) => {
+    const body = (req.body ?? {}) as Record<string, unknown>
+    const patch: Record<string, string> = {}
+
+    if (typeof body.clientId === 'string') patch.clientId = body.clientId.trim()
+    if (typeof body.clientSecret === 'string' && body.clientSecret.trim()) {
+      patch.clientSecret = body.clientSecret.trim()
+    }
+
+    await settingsStore.update('canva', patch)
+    resetCanvaTokenCache()
+    resetEngineProbes()
+    res.json(await redactedSettings())
+  })
+
+  app.post('/api/canva/connect', async (req, res) => {
+    const settings = (await settingsStore.read()).canva ?? {}
+    if (!settings.clientId || !settings.clientSecret) {
+      res.status(400).json({ error: 'Save a Canva client id and secret first.' })
+      return
+    }
+
+    prunePending()
+    const state = randomUUID()
+    // Canva mandates PKCE with SHA-256; the verifier must survive until the
+    // callback, so it is held with the pending entry rather than sent anywhere.
+    const pkce = createCanvaPkce()
+
+    const origin =
+      typeof req.body?.origin === 'string' && req.body.origin
+        ? String(req.body.origin).replace(/\/$/, '')
+        : `${req.protocol}://${req.get('host')}`
+    const redirectUri = `${origin}/api/canva/callback`
+
+    pending.set(state, {
+      provider: 'canva',
+      redirectUri,
+      createdAt: Date.now(),
+      codeVerifier: pkce.verifier
+    })
+
+    res.json({
+      url: buildCanvaAuthUrl({
+        clientId: settings.clientId,
+        redirectUri,
+        state,
+        codeChallenge: pkce.challenge
+      }),
+      redirectUri
+    })
+  })
+
+  app.get('/api/canva/callback', async (req: Request, res: Response) => {
+    const state = typeof req.query.state === 'string' ? req.query.state : ''
+    const code = typeof req.query.code === 'string' ? req.query.code : ''
+    const error = typeof req.query.error === 'string' ? req.query.error : ''
+
+    const entry = state ? pending.get(state) : undefined
+    if (state) pending.delete(state)
+
+    if (error) {
+      res.status(400).type('html').send(resultPage('Not connected', `Canva reported: ${error}`, false))
+      return
+    }
+    if (!entry || entry.provider !== 'canva' || !entry.codeVerifier) {
+      res
+        .status(400)
+        .type('html')
+        .send(
+          resultPage(
+            'Not connected',
+            'This sign-in link has expired or was not started here. Try connecting again.',
+            false
+          )
+        )
+      return
+    }
+    if (!code) {
+      res.status(400).type('html').send(resultPage('Not connected', 'Canva returned no authorisation code.', false))
+      return
+    }
+
+    try {
+      const settings = (await settingsStore.read()).canva ?? {}
+      if (!settings.clientId || !settings.clientSecret) {
+        throw new Error('The Canva client id and secret are no longer configured.')
+      }
+
+      const tokens = await exchangeCanvaCode({
+        clientId: settings.clientId,
+        clientSecret: settings.clientSecret,
+        code,
+        codeVerifier: entry.codeVerifier,
+        redirectUri: entry.redirectUri
+      })
+
+      if (!tokens.refreshToken) {
+        throw new Error('Canva did not return a refresh token. Try connecting again.')
+      }
+
+      await settingsStore.update('canva', { refreshToken: tokens.refreshToken })
+      resetCanvaTokenCache()
+      resetEngineProbes()
+
+      const account = await fetchCanvaAccount(tokens.accessToken)
+      if (account) await settingsStore.update('canva', { account })
+
+      res
+        .type('html')
+        .send(resultPage('Connected', account ? `Signed in as ${account}.` : 'Canva account connected.', true))
+    } catch (err) {
+      res
+        .status(400)
+        .type('html')
+        .send(resultPage('Not connected', err instanceof Error ? err.message : String(err), false))
+    }
+  })
+
+  app.post('/api/canva/test', async (_req, res) => {
+    const result = await verifyCanvaCredentials()
+    if (result.ok && result.account) {
+      await settingsStore.update('canva', { account: result.account })
+    }
+    res.json(result)
+  })
+
+  app.post('/api/canva/disconnect', async (_req, res) => {
+    await settingsStore.clear('canva')
+    resetCanvaTokenCache()
     resetEngineProbes()
     res.json(await redactedSettings())
   })
