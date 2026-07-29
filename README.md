@@ -20,6 +20,11 @@ PDF *and* recovers the notes, mapped to the right page.
 - A **Nextcloud app** — keeps PDF versions of every presentation in a folder and its
   subfolders up to date automatically.
 
+![Converting a folder of presentations: the form, live per-file results showing pages, notes and which engines ran, and the engine availability grid](docs/screenshots/convert-folder.png)
+
+*Real captures of the running app, not mockups — produced by `npm run screenshots`,
+which converts a demo folder and photographs the result.*
+
 ## The problem it actually solves
 
 A deck's slide count and its PDF's page count usually **disagree**, because every exporter
@@ -73,6 +78,8 @@ Watch a folder and convert whatever lands in it:
 ```bash
 presentation-converter watch ~/Dropbox/Incoming --out-dir ~/PDFs
 ```
+
+![The watch folder tab: choose a folder to watch and an output folder, and new or changed presentations convert automatically](docs/screenshots/watch-folder.png)
 
 Run the GUI (and the worker API) at <http://127.0.0.1:4747>:
 
@@ -157,6 +164,14 @@ no notes field, so a PPTX has to be fetched anyway; taking the pages from the sa
 halves the API cost and guarantees the notes and the pages describe the same version of the
 deck. That does mean LibreOffice or Keynote is required. See [docs/canva.md](docs/canva.md).
 
+### Connecting accounts
+
+![The Settings tab: Google Slides with sign-in or service-account options, and Canva with its client credentials and redirect URL](docs/screenshots/settings.png)
+
+Credentials are stored in your user config directory with `0600` permissions, and the page
+shows the exact path. Environment variables, when set, take precedence over anything saved
+here.
+
 ## The sidecar
 
 `Q3 Review.pdf` gets `Q3 Review.notes.json` beside it:
@@ -222,7 +237,12 @@ npm run build       # everything
 npm test            # core unit tests
 npm run typecheck   # all workspaces
 npm run dev         # server + GUI
+npm run screenshots # regenerate docs/screenshots from the running app
 ```
+
+`npm run screenshots` needs the server running (`npm run dev`) and Chrome installed. It
+drives headless Chrome over the DevTools Protocol — no Puppeteer dependency — and measures
+each panel so the images clip cleanly instead of relying on hard-coded heights.
 
 ## Status
 

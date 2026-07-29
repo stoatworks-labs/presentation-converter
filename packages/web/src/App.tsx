@@ -41,23 +41,86 @@ function Engines({ engines }: { engines: EngineStatus[] }): JSX.Element {
   )
 }
 
+const MODES = Object.keys(MODE_LABEL) as Mode[]
+
+/**
+ * The last-used folders and options.
+ *
+ * Persisted because the common case is converting the same folders repeatedly —
+ * a show's incoming directory doesn't change between runs, and retyping a deep
+ * path after every reload is needless friction.
+ */
+const UI_STATE_KEY = 'presentation-converter:ui'
+
+interface StoredUiState {
+  inputDir?: string
+  outputDir?: string
+  recursive?: boolean
+  preserveTree?: boolean
+  force?: boolean
+  writeSidecar?: boolean
+}
+
+function loadUiState(): StoredUiState {
+  try {
+    const raw = window.localStorage.getItem(UI_STATE_KEY)
+    const parsed: unknown = raw ? JSON.parse(raw) : null
+    return parsed && typeof parsed === 'object' ? (parsed as StoredUiState) : {}
+  } catch {
+    // Private browsing, or a corrupt value — defaults are fine.
+    return {}
+  }
+}
+
+/** Reads the selected tab from the URL hash, so a view can be linked to. */
+function modeFromHash(): Mode {
+  const hash = window.location.hash.replace(/^#/, '')
+  return MODES.includes(hash as Mode) ? (hash as Mode) : 'files'
+}
+
 export function App(): JSX.Element {
   const [version, setVersion] = useState('')
   const [engines, setEngines] = useState<EngineStatus[]>([])
-  const [mode, setMode] = useState<Mode>('files')
+  const [mode, setMode] = useState<Mode>(modeFromHash)
 
-  const [inputDir, setInputDir] = useState('')
-  const [outputDir, setOutputDir] = useState('')
+  const [stored] = useState(loadUiState)
+  const [inputDir, setInputDir] = useState(stored.inputDir ?? '')
+  const [outputDir, setOutputDir] = useState(stored.outputDir ?? '')
   const [files, setFiles] = useState<string[]>([])
 
-  const [recursive, setRecursive] = useState(true)
-  const [preserveTree, setPreserveTree] = useState(true)
-  const [force, setForce] = useState(false)
-  const [writeSidecar, setWriteSidecar] = useState(true)
+  const [recursive, setRecursive] = useState(stored.recursive ?? true)
+  const [preserveTree, setPreserveTree] = useState(stored.preserveTree ?? true)
+  const [force, setForce] = useState(stored.force ?? false)
+  const [writeSidecar, setWriteSidecar] = useState(stored.writeSidecar ?? true)
 
   const [job, setJob] = useState<Job | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        UI_STATE_KEY,
+        JSON.stringify({ inputDir, outputDir, recursive, preserveTree, force, writeSidecar })
+      )
+    } catch {
+      // Storage unavailable; the app works fine without persistence.
+    }
+  }, [inputDir, outputDir, recursive, preserveTree, force, writeSidecar])
+
+  // Keep the hash in step with the tab, and follow the browser's back button.
+  useEffect(() => {
+    const onHashChange = (): void => setMode(modeFromHash())
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  useEffect(() => {
+    const target = `#${mode}`
+    if (window.location.hash !== target) {
+      window.history.replaceState(null, '', target)
+    }
+  }, [mode])
 
   useEffect(() => {
     void api
@@ -65,9 +128,11 @@ export function App(): JSX.Element {
       .then((status) => {
         setVersion(status.version)
         setEngines(status.engines)
-        // Reattach to a job still running from a previous page load.
+        // Reattach to whatever this server was last doing: a job still running,
+        // or failing that the most recent one — so a reload doesn't wipe the
+        // results of a conversion that finished a moment ago.
         const running = status.jobs.find((candidate) => candidate.state === 'running')
-        if (running) setJob(running)
+        setJob(running ?? status.jobs[0] ?? null)
       })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
   }, [])
@@ -159,7 +224,7 @@ export function App(): JSX.Element {
       {error && <div className="error-banner">{error}</div>}
 
       <div className="tabs" role="tablist">
-        {(Object.keys(MODE_LABEL) as Mode[]).map((candidate) => (
+        {MODES.map((candidate) => (
           <button
             key={candidate}
             role="tab"
