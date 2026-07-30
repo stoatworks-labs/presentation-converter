@@ -20,6 +20,12 @@ PDF *and* recovers the notes, mapped to the right page.
 - A **Nextcloud app** — keeps PDF versions of every presentation in a folder and its
   subfolders up to date automatically.
 
+[![Watch it running — 45 seconds](docs/video-thumb.png)](https://www.youtube.com/watch?v=TxGyZs5v3zE)
+
+*A 45-second tour, driven over the app's own HTTP API. The deck it converts is six
+slides with one hidden, and comes out as a five-page PDF with five notes mapped to the
+pages that survived — the problem this tool exists to solve, happening on screen.*
+
 ![Converting a folder of presentations: the form, live per-file results showing pages, notes and which engines ran, and the engine availability grid](docs/screenshots/convert-folder.png)
 
 *Real captures of the running app, not mockups — produced by `npm run screenshots`,
