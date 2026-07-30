@@ -1,6 +1,6 @@
 {
   "name": "@presentation-converter/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Conversion engines, presenter-notes extraction and the notes sidecar format",
   "license": "MIT",
   "type": "module",
@@ -12,7 +12,9 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

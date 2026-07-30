@@ -1,0 +1,107 @@
+name: release
+
+# Publish the two things this repo actually ships.
+#
+# Deliberately no .dmg/.pkg/NSIS: there is no GUI here. The packages are a CLI,
+# a core library, an HTTP server and a web front-end, plus a Nextcloud app.
+# Desktop installers would be a shape that does not fit — the CLI installs from
+# a tarball or npm, and the Nextcloud app installs the way every Nextcloud app
+# does.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Derive version
+        id: ver
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          case "$version" in
+            [0-9]*) ;;
+            *) version="$(node -p "require('./package.json').version")" ;;
+          esac
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Pack the npm packages
+        shell: bash
+        # npm pack rather than a hand-rolled tarball: it honours each package's
+        # own "files" field, so the archive matches what `npm install` would
+        # actually deliver. The web package is private and is skipped.
+        run: |
+          mkdir -p dist-release
+          for p in packages/core packages/cli packages/server; do
+            if node -p "require('./$p/package.json').private === true" | grep -q true; then
+              echo "skipping private package $p"
+              continue
+            fi
+            ( cd "$p" && npm pack --pack-destination "$GITHUB_WORKSPACE/dist-release" )
+          done
+          ls -la dist-release
+
+      - name: Pack the Nextcloud app
+        shell: bash
+        # Same shape Nextcloud expects: a tarball whose top-level directory is
+        # the app id, so it can be dropped straight into custom_apps/.
+        run: |
+          appver="$(grep -oE '<version>[^<]+' nextcloud/presentationconverter/appinfo/info.xml | sed 's/<version>//')"
+          echo "nextcloud app version: $appver"
+          tar czf "dist-release/presentationconverter-${appver}.tar.gz" \
+            -C nextcloud presentationconverter
+          ls -la dist-release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: presentation-converter
+          path: dist-release/*
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          body: |
+            **`presentationconverter-*.tar.gz`** — the Nextcloud app. Unpack into your
+            instance's `custom_apps/` and enable it.
+
+            **`presentation-converter-*.tgz`** — the npm packages (`core`, `cli`, `server`),
+            installable with `npm install <file>`. The CLI's binary is
+            `presentation-converter`.
+
+            No desktop installers: this project has no GUI. It is a CLI, a library, an HTTP
+            server and a web front-end.
+
+            Converts Keynote / PowerPoint / Slides / ODP to PDF **plus a `.notes.json`
+            presenter-notes sidecar**. Exporters drop hidden slides, so the slide count and
+            the PDF page count do not necessarily match — the notes are parsed from the
+            source XML rather than the rendered output for that reason.
+          generate_release_notes: true

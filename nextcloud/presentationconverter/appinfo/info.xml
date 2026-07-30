@@ -19,7 +19,7 @@ Conversion happens server-side through LibreOffice. Because Keynote cannot run o
 Files are only ever converted when the source is newer than the existing PDF, so a scan over an
 unchanged folder is cheap.
     ]]></description>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <licence>agpl</licence>
     <author>Allan Sargeant</author>
     <namespace>PresentationConverter</namespace>

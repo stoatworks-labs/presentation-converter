@@ -11,3 +11,4 @@ coverage/
 # Local scratch output from manual conversion runs
 /tmp-out/
 /fixtures-out/
+dist-release/
