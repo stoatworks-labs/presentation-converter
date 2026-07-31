@@ -31,6 +31,23 @@ pages that survived — the problem this tool exists to solve, happening on scre
 *Real captures of the running app, not mockups — produced by `npm run screenshots`,
 which converts a demo folder and photographs the result.*
 
+<!-- downloads:start -->
+
+## Download
+
+**[v0.1.1](https://github.com/stoatworks-labs/presentation-converter/releases/tag/v0.1.1)**
+
+This release contains:
+
+- [`presentation-converter-cli-0.1.1.tgz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.1.1/presentation-converter-cli-0.1.1.tgz) — npm package, 8 KB
+- [`presentation-converter-core-0.1.1.tgz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.1.1/presentation-converter-core-0.1.1.tgz) — npm package, 67 KB
+- [`presentation-converter-server-0.1.1.tgz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.1.1/presentation-converter-server-0.1.1.tgz) — npm package, 30 KB
+- [`presentationconverter-0.1.1.tar.gz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.1.1/presentationconverter-0.1.1.tar.gz) — Nextcloud app package, 16 KB
+
+All builds, checksums and release notes: [github.com/stoatworks-labs/presentation-converter/releases](https://github.com/stoatworks-labs/presentation-converter/releases).
+
+<!-- downloads:end -->
+
 ## The problem it actually solves
 
 A deck's slide count and its PDF's page count usually **disagree**, because every exporter
