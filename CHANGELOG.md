@@ -3,6 +3,30 @@
 All notable changes to this project are recorded here. Versions follow
 [semantic versioning](https://semver.org/).
 
+## [0.1.1] — 2026-07-30
+
+A maintenance release. No conversion behaviour changed.
+
+### Added
+
+- **Built-in logging and crash diagnostics.** Structured logging through the vendored
+  `diag` module, and `--collect-diagnostics` to gather a run into a single bundle. File
+  writes are synchronous on purpose — an async stream loses the crashing run's log. See
+  [docs/diagnostics.md](docs/diagnostics.md).
+- A walkthrough video, linked from the README.
+- Sponsor button configuration (GitHub Sponsors and Liberapay).
+
+### Fixed
+
+- **The v0.1.0 release carried no artefacts.** The workflow built them and then failed to
+  attach them, so the release page offered nothing to download. They are attached now.
+- Internal workspace version pins are bumped alongside the package versions, so a fresh
+  install of the CLI resolves the matching `core` rather than the previous one.
+
+### Changed
+
+- GitHub URLs throughout the docs now point at the `stoatworks-labs` account.
+
 ## [0.1.0] — 2026-07-29
 
 First release. Converts Keynote, PowerPoint, Google Slides, Canva and OpenDocument
@@ -66,4 +90,5 @@ presentations to PDF, and recovers the presenter notes into a `.notes.json` side
   development machine, so Office and ODF rendering was exercised through Keynote instead.
 - Keynote cannot run on Linux, so a Linux host needs a paired Mac for `.key` files.
 
+[0.1.1]: https://github.com/stoatworks-labs/presentation-converter/releases/tag/v0.1.1
 [0.1.0]: https://github.com/stoatworks-labs/presentation-converter/releases/tag/v0.1.0
