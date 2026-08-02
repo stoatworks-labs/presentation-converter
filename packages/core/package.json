@@ -1,6 +1,6 @@
 {
   "name": "@presentation-converter/core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Conversion engines, presenter-notes extraction and the notes sidecar format",
   "license": "MIT",
   "type": "module",
