@@ -57,6 +57,21 @@ header.masthead {
   flex-wrap: wrap;
 }
 
+/* Far right of the masthead, past the version line. */
+.masthead-about {
+  margin-left: auto;
+  padding: 3px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  opacity: 0.6;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.masthead-about:hover { opacity: 1; }
+
 header.masthead h1 {
   font-size: 20px;
   margin: 0;

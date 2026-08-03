@@ -24,6 +24,44 @@ program
   )
   .version(VERSION)
 
+/*
+ * The same facts as the About window in the web UI and every other Stoatworks
+ * Labs product, for a terminal. The links are duplicated from
+ * packages/web/public/about-data.js rather than imported: that file is a
+ * browser global written by stoatworks-backend's sync-about.py, and the CLI has
+ * no DOM to run it in.
+ */
+program
+  .command('about')
+  .description('show the version, the documentation links and how to support the work')
+  .action(() => {
+    const rows: Array<[string, string]> = [
+      ['User guide', 'https://stoatworks-labs.com/software/presentation-converter/guide/'],
+      ['Project page', 'https://stoatworks-labs.com/software/presentation-converter/'],
+      ['Source on GitHub', 'https://github.com/stoatworks-labs/presentation-converter']
+    ]
+    const funding: Array<[string, string]> = [
+      ['GitHub Sponsors', 'https://github.com/sponsors/stoatworks-labs'],
+      ['Ko-fi', 'https://ko-fi.com/stoatworkslabs'],
+      ['Patreon', 'https://patreon.com/StoatworksLabs'],
+      ['Liberapay', 'https://liberapay.com/stoatworks-labs']
+    ]
+    const pad = (items: Array<[string, string]>): number =>
+      items.reduce((width, [label]) => Math.max(width, label.length), 0)
+
+    console.log(`${bold('Presentation Converter')} v${VERSION}`)
+    console.log('Decks in, PDF and presenter notes out')
+    console.log('MIT licensed')
+    console.log()
+    for (const [label, url] of rows) console.log(`  ${label.padEnd(pad(rows))}  ${dim(url)}`)
+    console.log()
+    console.log('Support the work:')
+    for (const [label, url] of funding) console.log(`  ${label.padEnd(pad(funding))}  ${dim(url)}`)
+    console.log()
+    console.log(dim('Stoatworks Labs — Open tools for the people who run the show.'))
+    console.log(dim('https://stoatworks-labs.com'))
+  })
+
 /** Options every conversion command shares. */
 function addConversionOptions(command: Command): Command {
   return command

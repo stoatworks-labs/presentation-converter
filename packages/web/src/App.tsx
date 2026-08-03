@@ -219,6 +219,11 @@ export function App(): JSX.Element {
         <span className="version">
           {version ? `v${version}` : ''} · PDF + presenter-notes sidecar
         </span>
+        {/* Opens the shared About dialog — see public/about.js, which delegates
+            this attribute from the document, so nothing needs importing here. */}
+        <button type="button" className="masthead-about" data-stoatworks-about>
+          About
+        </button>
       </header>
 
       {error && <div className="error-banner">{error}</div>}
