@@ -284,6 +284,10 @@ Not yet exercised against a live service: the Nextcloud app (written but never r
 development machine), and full OAuth round trips for Google or Canva — each needs real
 credentials and a human at the consent screen.
 
+<!-- attributions:start -->
+This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
+<!-- attributions:end -->
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE). The Nextcloud app under `nextcloud/` is AGPL-3.0, as
