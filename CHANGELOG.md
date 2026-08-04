@@ -3,6 +3,31 @@
 All notable changes to this project are recorded here. Versions follow
 [semantic versioning](https://semver.org/).
 
+## [0.1.2] — 2026-08-03
+
+A security and packaging release. No conversion behaviour changed.
+
+### Fixed
+
+- **`fast-xml-parser` moved to v5**, clearing the XMLBuilder injection advisory.
+- **The published tarballs were named 0.1.1.** The first v0.1.2 tag bumped only the root
+  `package.json`, and `npm pack` reads each workspace package's own version — so the
+  release advertised a version it did not contain. That tag and release were withdrawn.
+  Bumping all four workspace packages then exposed the second half of it: `cli` and
+  `server` pin their siblings by exact version, so they would have shipped depending on a
+  0.1.2 sibling that did not exist.
+- **The Nextcloud app was still going out labelled 0.1.1.** The release tars it straight
+  from `appinfo/info.xml`, which is a fifth version number nothing else touches.
+
+### Added
+
+- A Download section with direct per-platform links, and `AGENTS.md`.
+- A Dependabot config, so version drift stops being invisible.
+
+### Changed
+
+- The README points at the re-filmed tour.
+
 ## [0.1.1] — 2026-07-30
 
 A maintenance release. No conversion behaviour changed.
