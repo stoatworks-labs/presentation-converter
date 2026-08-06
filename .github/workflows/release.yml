@@ -52,7 +52,14 @@ jobs:
         run: |
           mkdir -p dist-release
           for p in packages/core packages/cli packages/server; do
-            if node -p "require('./$p/package.json').private === true" | grep -q true; then
+            # Read into a variable rather than `node … | grep -q true`. Actions
+            # runs `shell: bash` as `bash -eo pipefail`, and a `grep -q` that
+            # finds its match exits at once, so node takes SIGPIPE and the
+            # pipeline fails -- making this condition FALSE. That is the
+            # dangerous direction here: a package marked private would not be
+            # skipped, and would be packed for release.
+            __private=$( node -p "require('./$p/package.json').private === true" )
+            if [ "$__private" = "true" ]; then
               echo "skipping private package $p"
               continue
             fi
