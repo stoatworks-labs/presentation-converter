@@ -44,13 +44,18 @@ function remoteAwarePdfPath(
  * newlines, none of which belong in a path.
  */
 function safeFilename(name: string): string {
-  return name
-    .replace(/[/\\:*?"<>|\u0000-\u001f]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/^\.+/, '')
-    .slice(0, 120)
-    .trim()
+  return (
+    name
+      // The C0 control range is the point of this character class, not an oversight:
+      // a title with a raw newline or NUL in it is exactly what must not reach a path.
+      // eslint-disable-next-line no-control-regex
+      .replace(/[/\\:*?"<>|\u0000-\u001f]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/^\.+/, '')
+      .slice(0, 120)
+      .trim()
+  )
 }
 
 /**

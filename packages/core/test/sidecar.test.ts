@@ -9,7 +9,10 @@ const slide = (index: number, notes: string, hidden = false): ExtractedSlide => 
   hidden
 })
 
-const build = (slides: ExtractedSlide[], pageCount: number) =>
+const build = (
+  slides: ExtractedSlide[],
+  pageCount: number
+): ReturnType<typeof buildSidecar> =>
   buildSidecar({
     sourcePath: '/decks/Q3 Review.pptx',
     sourceFormat: 'pptx',

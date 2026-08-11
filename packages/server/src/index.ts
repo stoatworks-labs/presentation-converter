@@ -16,7 +16,7 @@ import {
 import { JobManager } from './jobs.js'
 import { browse, describePath } from './browse.js'
 import { registerSettingsRoutes, PUBLIC_SETTINGS_PATHS } from './settingsRoutes.js'
-import { collectDiagnostics, init as initDiag, log, say } from './diag/index.js';
+import { collectDiagnostics, init as initDiag, say } from './diag/index.js';
 
 // Before anything that can fail, so a failure during startup is logged and
 // captured like any other.

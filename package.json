@@ -16,19 +16,25 @@
     "packages/web"
   ],
   "scripts": {
-    "build:libs": "npm run build --workspace @presentation-converter/core",
-    "build": "npm run build:libs && npm run build --workspace @presentation-converter/web && npm run build --workspace @presentation-converter/server && npm run build --workspace @presentation-converter/cli",
+    "build:libs": "npm run build --workspace @presentation-converter/core && npm run build --workspace @presentation-converter/server",
+    "build": "npm run build:libs && npm run build --workspace @presentation-converter/web && npm run build --workspace @presentation-converter/cli",
     "dev": "npm run build:libs && npm run dev --workspace @presentation-converter/server",
     "dev:web": "npm run dev --workspace @presentation-converter/web",
     "typecheck": "npm run build:libs && npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspace @presentation-converter/core",
-    "lint": "eslint packages/*/src --ext .ts,.tsx",
+    "lint": "eslint --cache .",
     "format": "prettier --write \"packages/*/src/**/*.{ts,tsx,css}\"",
     "start": "node packages/cli/dist/index.js",
     "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
+    "@electron-toolkit/eslint-config-ts": "^3.1.0",
     "@types/node": "^22.10.2",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
     "prettier": "^3.4.2",
     "typescript": "^5.7.2"
   }

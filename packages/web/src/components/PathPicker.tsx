@@ -46,6 +46,10 @@ export function PathPicker({
   }, [])
 
   useEffect(() => {
+    // Fetch-on-open: every setState in `load` runs after an await, so this is
+    // not the synchronous cascade the rule is aimed at. Left as-is deliberately
+    // — see the lint follow-up issue before rewriting it.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (open && !listing) void load(value || undefined)
   }, [open, listing, load, value])
 

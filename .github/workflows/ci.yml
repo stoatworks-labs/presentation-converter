@@ -3,19 +3,6 @@ name: ci
 # Until this existed the repo had only a tag-triggered release, so no workflow
 # ran on `pull_request` and Dependabot bumps arrived with nothing to gate a
 # merge on.
-#
-# Two scripts are deliberately not steps, both already failing on main:
-#
-#   npm run typecheck  `build:libs` builds only @presentation-converter/core,
-#                      but packages/cli imports @presentation-converter/server —
-#                      so tsc stops at TS2307 on a package that was never built.
-#                      The build order needs fixing, not the check.
-#   npm run lint       eslint is not installed at all: the script exists, the
-#                      dependency does not, and it fails with
-#                      `sh: eslint: command not found`.
-#
-# `npm run build` builds every workspace in dependency order and does typecheck
-# them, so the compile is still covered.
 on:
   push:
     branches: [main]
@@ -37,6 +24,17 @@ jobs:
       # installs by ignoring the peer graph is exactly what this is here to catch.
       - name: Install dependencies
         run: npm ci
+
+      # Before Test and Build, on purpose. `typecheck` builds its own
+      # prerequisites via `build:libs`, and that ordering is exactly what used
+      # to be broken. Run it after a full `npm run build` and every workspace is
+      # already compiled, so the step would pass whether or not `build:libs`
+      # still covers what the CLI imports.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
 
       - name: Test
         run: npm test
