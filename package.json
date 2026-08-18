@@ -1,6 +1,6 @@
 {
   "name": "presentation-converter",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": true,
   "description": "Convert Keynote, PowerPoint, Google Slides and ODP presentations to PDF with a presenter-notes sidecar",
   "license": "MIT",
