@@ -1,6 +1,6 @@
 {
   "name": "@presentation-converter/web",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Browser GUI for presentation-converter",
   "license": "MIT",
   "private": true,

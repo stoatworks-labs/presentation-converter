@@ -1,6 +1,6 @@
 {
   "name": "@presentation-converter/server",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "HTTP API, progress stream and GUI host for presentation-converter",
   "license": "MIT",
   "type": "module",
