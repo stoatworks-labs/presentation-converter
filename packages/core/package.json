@@ -21,7 +21,7 @@
     "test": "npm run build && node --test --experimental-strip-types test/*.test.ts"
   },
   "dependencies": {
-    "chokidar": "^4.0.3",
+    "chokidar": "^5.0.0",
     "fast-xml-parser": "^5.7.0",
     "fflate": "^0.8.2",
     "pdf-lib": "^1.17.1"
