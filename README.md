@@ -35,14 +35,13 @@ which converts a demo folder and photographs the result.*
 
 ## Download
 
-**[v0.1.2](https://github.com/stoatworks-labs/presentation-converter/releases/tag/v0.1.2)**
+**[v0.2.0](https://github.com/stoatworks-labs/presentation-converter/releases/tag/v0.2.0)**
 
 This release contains:
 
-- [`presentation-converter-cli-0.1.2.tgz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.1.2/presentation-converter-cli-0.1.2.tgz) — npm package, 8 KB
-- [`presentation-converter-core-0.1.2.tgz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.1.2/presentation-converter-core-0.1.2.tgz) — npm package, 67 KB
-- [`presentation-converter-server-0.1.2.tgz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.1.2/presentation-converter-server-0.1.2.tgz) — npm package, 30 KB
-- [`presentationconverter-0.1.2.tar.gz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.1.2/presentationconverter-0.1.2.tar.gz) — Nextcloud app package, 16 KB
+- [`presentation-converter-cli-0.2.0.tgz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.2.0/presentation-converter-cli-0.2.0.tgz) — npm package, 9 KB
+- [`presentation-converter-core-0.2.0.tgz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.2.0/presentation-converter-core-0.2.0.tgz) — npm package, 67 KB
+- [`presentation-converter-server-0.2.0.tgz`](https://github.com/stoatworks-labs/presentation-converter/releases/download/v0.2.0/presentation-converter-server-0.2.0.tgz) — npm package, 30 KB
 
 All builds, checksums and release notes: [github.com/stoatworks-labs/presentation-converter/releases](https://github.com/stoatworks-labs/presentation-converter/releases).
 
