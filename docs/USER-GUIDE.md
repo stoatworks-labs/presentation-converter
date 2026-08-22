@@ -3,7 +3,7 @@
 Presentation Converter turns **Keynote, PowerPoint, Google Slides, ODP and Canva decks into PDFs
 with a presenter-notes sidecar**. It ships as a CLI, a GUI and a Nextcloud app.
 
-> **Status:** in development, tagged at v0.1.1. The screenshots here are real captures of the
+> **Status:** in development, tagged at v0.2.0. The screenshots here are real captures of the
 > running app, produced by its own screenshot script.
 
 ---
