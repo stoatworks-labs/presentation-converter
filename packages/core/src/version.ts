@@ -8,5 +8,5 @@
  * written in that time records a generator two versions behind the build that
  * actually wrote it. test/version.test.ts now fails if they drift again.
  */
-export const VERSION = '0.1.2'
+export const VERSION = '0.2.0'
 export const GENERATOR = `presentation-converter ${VERSION}`
