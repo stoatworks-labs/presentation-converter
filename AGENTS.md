@@ -108,3 +108,10 @@ Log via `log` (structured) or `say` (console-shaped) from the vendored `diag` mo
 `console`. Anything written to stdout corrupts `--collect-diagnostics`, whose stdout is a
 path. File writes are synchronous on purpose: an async stream loses the crashing run's log.
 See [docs/diagnostics.md](docs/diagnostics.md).
+
+## Notes
+
+`docs/NOTES.md` carries this repo's working notes — current status, decisions
+already made, and the traps that have actually bitten. Read it before changing
+anything non-obvious. Cross-cutting fleet knowledge lives in
+[fleet-notes](https://github.com/stoatworks-labs/fleet-notes).
