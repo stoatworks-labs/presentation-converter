@@ -3,6 +3,7 @@ import { api, subscribe, type EngineStatus, type Job } from './api'
 import { PathPicker } from './components/PathPicker'
 import { Results } from './components/Results'
 import { Settings } from './components/Settings'
+import type { JSX } from 'react'
 
 type Mode = 'files' | 'folder' | 'watch' | 'settings'
 

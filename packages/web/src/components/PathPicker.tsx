@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, type BrowseResult } from '../api'
+import type { JSX } from 'react'
 
 interface Props {
   label: string

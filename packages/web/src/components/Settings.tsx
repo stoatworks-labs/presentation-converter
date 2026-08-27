@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type RedactedSettings } from '../api'
+import type { JSX } from 'react'
 
 type Mode = 'oauth' | 'service-account'
 

@@ -1,4 +1,5 @@
 import type { ConversionResult, Job } from '../api'
+import type { JSX } from 'react'
 
 const MARK: Record<ConversionResult['status'], string> = {
   ok: '✓',
