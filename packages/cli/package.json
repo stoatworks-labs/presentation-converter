@@ -18,7 +18,7 @@
   "dependencies": {
     "@presentation-converter/core": "0.2.0",
     "@presentation-converter/server": "0.2.0",
-    "commander": "^12.1.0"
+    "commander": "^15.0.0"
   },
   "devDependencies": {
     "@types/node": "^26.4.0",
