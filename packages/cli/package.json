@@ -16,8 +16,8 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@presentation-converter/core": "0.2.0",
-    "@presentation-converter/server": "0.2.0",
+    "@presentation-converter/core": "0.2.1",
+    "@presentation-converter/server": "0.2.1",
     "commander": "^15.0.0"
   },
   "devDependencies": {

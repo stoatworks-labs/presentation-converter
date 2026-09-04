@@ -21,7 +21,7 @@
     "dev": "tsc -p tsconfig.json --watch"
   },
   "dependencies": {
-    "@presentation-converter/core": "0.2.0",
+    "@presentation-converter/core": "0.2.1",
     "express": "^5.2.1",
     "pino": "^10.3.1"
   },
