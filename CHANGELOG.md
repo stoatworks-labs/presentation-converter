@@ -3,6 +3,31 @@
 All notable changes to this project are recorded here. Versions follow
 [semantic versioning](https://semver.org/).
 
+## [0.2.1] — 2026-09-04
+
+A dependency and toolchain release. No conversion behaviour changed.
+
+### Changed
+
+- **React 19**, and the global JSX namespace it removes.
+- Runtime dependencies moved on: `express` 5, `commander` 15, `chokidar` 5, `qs` 6.16.0,
+  `@types/node` 26, and the Vite toolchain.
+
+### Fixed
+
+- `qs` advisory cleared by way of the `express` 5 move.
+
+## [0.2.0] — 2026-08-18
+
+### Added
+
+- **A CI workflow**, so a pull request gets a status check.
+
+### Changed
+
+- The release and CI actions moved to current majors (`checkout`, `setup-node`,
+  `upload-artifact`, `download-artifact`, `action-gh-release`).
+
 ## [0.1.2] — 2026-08-03
 
 A security and packaging release. No conversion behaviour changed.
