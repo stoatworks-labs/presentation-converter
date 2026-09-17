@@ -3,6 +3,22 @@
 All notable changes to this project are recorded here. Versions follow
 [semantic versioning](https://semver.org/).
 
+## [0.2.2] — 2026-09-17
+
+A version-labelling release. No conversion behaviour changed.
+
+### Fixed
+
+- **The Nextcloud app tarball on v0.2.1 was named `presentationconverter-0.1.2.tar.gz`.**
+  The 0.2.1 bump reached the npm packages and not `appinfo/info.xml`, so a Nextcloud
+  instance on 0.1.2 saw no upgrade, and `VERSION` in `packages/core/src/version.ts` —
+  the number every sidecar names — stayed at 0.2.0. Both were brought up on main on
+  2026-09-10; this is the first tag that ships them.
+
+### Changed
+
+- Toolchain and type packages moved on: `vite`, `@types/node`, and the React family.
+
 ## [0.2.1] — 2026-09-04
 
 A dependency and toolchain release. No conversion behaviour changed.

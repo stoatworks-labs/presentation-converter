@@ -1,6 +1,6 @@
 {
   "name": "@presentation-converter/server",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "HTTP API, progress stream and GUI host for presentation-converter",
   "license": "MIT",
   "type": "module",
@@ -21,7 +21,7 @@
     "dev": "tsc -p tsconfig.json --watch"
   },
   "dependencies": {
-    "@presentation-converter/core": "0.2.1",
+    "@presentation-converter/core": "0.2.2",
     "express": "^5.2.1",
     "pino": "^10.3.1"
   },
