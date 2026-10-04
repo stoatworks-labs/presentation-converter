@@ -10,6 +10,16 @@ pushed out by `scripts/sync-attributions.py`. Edit it there, not here.
 
 Libraries, SDKs and frameworks the project is built on or bundles.
 
+### React
+
+<https://react.dev>  
+Licence: MIT  
+Copyright: Meta Platforms, Inc. and affiliates
+
+An npm dependency.
+
+The UI layer for the browser tools and the Electron and Tauri front ends.
+
 ### The npm ecosystem
 
 <https://www.npmjs.com>  
