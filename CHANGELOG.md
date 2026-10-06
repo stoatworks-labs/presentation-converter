@@ -3,6 +3,15 @@
 All notable changes to this project are recorded here. Versions follow
 [semantic versioning](https://semver.org/).
 
+## [0.2.3] — 2026-10-06
+
+A dependency release. No conversion behaviour changed.
+
+### Changed
+
+- The web UI is built with **Vite 8.3.1**, and the toolchain packages moved on
+  (`@electron-toolkit/eslint-config-ts` 4, the npm minor-and-patch group).
+
 ## [0.2.2] — 2026-09-17
 
 A version-labelling release. No conversion behaviour changed.
