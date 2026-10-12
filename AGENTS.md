@@ -14,7 +14,7 @@ Converts **Keynote, PowerPoint, Google Slides, Canva and OpenDocument** presenta
 PDF — **plus a `.notes.json` presenter-notes sidecar** carrying the speaker notes.
 
 npm-workspaces monorepo (Node/TS) plus a Nextcloud app. Public repo, MIT — except the
-Nextcloud app, which is **AGPL, as Nextcloud apps must be**. Current release **v0.1.1**.
+Nextcloud app, which is **AGPL, as Nextcloud apps must be**. Current release **v0.2.3**.
 
 ## 2. The two ideas that shape everything
 
