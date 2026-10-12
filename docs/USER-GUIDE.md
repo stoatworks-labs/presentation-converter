@@ -1,10 +1,10 @@
 # Presentation Converter user guide
 
 Presentation Converter turns **Keynote, PowerPoint, Google Slides, ODP and Canva decks into PDFs
-with a presenter-notes sidecar**. It ships as a CLI, a GUI and a Nextcloud app.
+with a presenter-notes sidecar**. It comes as a CLI, a GUI and a Nextcloud app.
 
 > **Status:** in development, tagged at v0.2.3. The screenshots here are real captures of the
-> running app, produced by its own screenshot script.
+> running app, made by its own screenshot script.
 
 ---
 
@@ -13,8 +13,8 @@ with a presenter-notes sidecar**. It ships as a CLI, a GUI and a Nextcloud app.
 A deck's slide count and its PDF's page count usually **disagree**, because every exporter
 silently drops hidden or skipped slides.
 
-Convert a 4-slide deck whose third slide is hidden and you get a 3-page PDF — so a naive tool
-puts slide 3's notes on page 3, **and every note from there on is one page out**.
+Convert a 4-slide deck whose third slide is hidden and you get a 3-page PDF, so a naive tool
+puts slide 3's notes on page 3, **and every note from there on is a page out**.
 
 This tool reads the PDF back, reconciles the two, and records what it did:
 
@@ -24,15 +24,15 @@ This tool reads the PDF back, reconciles the two, and records what it did:
 "alignment": "mismatch"   // couldn't reconcile — notes emitted, but flagged as suspect
 ```
 
-> **Check `alignment` on anything that matters.** A `mismatch` is surfaced in the CLI, in the GUI
-> and in the sidecar's `warnings` rather than being quietly wrong — but it is still emitted, so
-> nothing stops you using it.
+> **Check `alignment` on anything that matters.** A `mismatch` shows up in the CLI, in the GUI
+> and in the sidecar's `warnings` rather than being wrong without telling anyone, but it's still
+> written out, so nothing stops you using it.
 
 ---
 
 ## Installing
 
-Requires **Node.js 20+**.
+Needs **Node.js 20+**.
 
 ```bash
 git clone https://github.com/stoatworks-labs/presentation-converter.git
@@ -41,7 +41,7 @@ npm install
 npm run build
 ```
 
-For PowerPoint and ODP files, install [LibreOffice](https://www.libreoffice.org/); on macOS,
+For PowerPoint and ODP files, install [LibreOffice](https://www.libreoffice.org/). On macOS,
 Keynote can stand in for it.
 
 **Find out what your machine can actually do before you need it to:**
@@ -74,8 +74,8 @@ presentation-converter serve
 
 Everything takes `--json` for scripting, and **exits non-zero if any file failed**.
 
-**Re-runs are incremental**: a deck whose PDF and sidecar are already newer than it is skipped,
-so a repeat batch over an unchanged folder takes milliseconds. Use `--force` to override.
+**Re-runs are incremental**: a deck whose PDF and sidecar are already newer than it gets skipped,
+so a repeat batch over an unchanged folder takes milliseconds. Use `--force` to override that.
 
 ### Options worth knowing
 
@@ -93,10 +93,10 @@ so a repeat batch over an unchanged folder takes milliseconds. Use `--force` to 
 
 ## What converts with what
 
-> **Notes extraction is deliberately independent of PDF rendering.** For Office and ODF files the
-> notes are read straight out of the source package's XML, so they are the author's exact text
-> regardless of which engine drew the PDF — and that part works **headless, with no application
-> installed**.
+> **I've kept notes extraction independent of PDF rendering on purpose.** For Office and ODF
+> files the notes are read straight out of the source package's XML, so you get the author's
+> text word for word whichever engine drew the PDF, and that part works **headless, with no
+> application installed**.
 
 | Format | PDF rendered by | Notes read from |
 |---|---|---|
@@ -107,7 +107,7 @@ so a repeat batch over an unchanged folder takes milliseconds. Use `--force` to 
 | Google Slides | Drive export | Slides API |
 | Canva | PPTX export, rendered locally | the exported `.pptx` (OOXML) |
 
-**Keynote cannot run on Linux**, so a Linux host needs a paired Mac for `.key` files — see
+**Keynote can't run on Linux**, so a Linux host needs a paired Mac for `.key` files. See
 [nextcloud.md](nextcloud.md).
 
 ---
@@ -117,7 +117,8 @@ so a repeat batch over an unchanged folder takes milliseconds. Use `--force` to 
 ![The Settings tab: Google Slides with sign-in or service-account options, and Canva with its client credentials and redirect URL.](screenshots/settings.png)
 
 Credentials are stored in your user config directory with `0600` permissions, and the page shows
-the exact path. **Environment variables, when set, take precedence over anything saved here.**
+the exact path. **Environment variables, when they're set, take precedence over anything saved
+here.**
 
 ### Google Slides
 
@@ -135,7 +136,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 ```
 
 Either route needs **both the Google Drive API and the Google Slides API** enabled on the
-project. Two limits that catch people:
+project. Two limits that catch people out:
 
 - **A service account can only see presentations shared with its email address.**
 - **Drive refuses to export presentations over 10 MB.**
@@ -147,12 +148,12 @@ presentation-converter convert "https://www.canva.com/design/DAFxyz123/edit" -o 
 ```
 
 Or with no setup at all: export from Canva with **Download → PPTX** and convert that file like
-any other PowerPoint deck — Canva embeds the speaker notes in it.
+any other PowerPoint deck. Canva puts the speaker notes in it.
 
 > **The Canva engine exports PPTX, never PDF**, and renders that file locally. Canva's API
-> exposes no notes field, so a PPTX has to be fetched anyway; taking the pages from the same
-> artefact halves the API cost and guarantees the notes and the pages describe the same version
-> of the deck. **That does mean LibreOffice or Keynote is required.**
+> has no notes field, so it has to fetch a PPTX anyway, and taking the pages from the same file
+> halves the API cost and guarantees the notes and the pages describe the same version of the
+> deck. **It does mean you need LibreOffice or Keynote.**
 
 See [canva.md](canva.md).
 
@@ -176,7 +177,7 @@ See [canva.md](canva.md).
 
 ## See also
 
-- [sidecar-format.md](sidecar-format.md) — the notes sidecar, including the `alignment` field
-- [canva.md](canva.md) — the Canva engine and why it exports PPTX
-- [nextcloud.md](nextcloud.md) — the Nextcloud app, and the paired-Mac arrangement for Keynote
-- [README](../README.md) — full option list and downloads
+- [sidecar-format.md](sidecar-format.md): the notes sidecar, including the `alignment` field
+- [canva.md](canva.md): the Canva engine and why it exports PPTX
+- [nextcloud.md](nextcloud.md): the Nextcloud app, and the paired-Mac arrangement for Keynote
+- [README](../README.md): full option list and downloads

@@ -1,34 +1,34 @@
 # Presentation Converter
 
 > **AI-assisted project.** This codebase was created with [Claude Code](https://claude.com/claude-code)
-> (Anthropic), directed and reviewed by a human author — including the code, the docs,
-> and the design decisions recorded below. Review it yourself before relying on it in
-> production, same as you would for any code.
+> (Anthropic), directed and reviewed by a human author. That covers the code, the docs and the
+> design decisions written up below. Check it over yourself before you rely on it for a show,
+> as you would with any code.
 
-Converts Keynote, PowerPoint, Google Slides, Canva and OpenDocument presentations to PDF —
+Converts Keynote, PowerPoint, Google Slides, Canva and OpenDocument presentations to PDF,
 **and keeps the presenter notes**, in a `.notes.json` sidecar written next to each PDF.
 
-Exporting a deck to PDF is easy. Every tool that does it throws the speaker notes away,
-which is a problem if the PDF is what you actually present from. This tool exports the
-PDF *and* recovers the notes, mapped to the right page.
+Exporting a deck to PDF is easy. Every tool that does it throws the speaker notes in the bin,
+which is a bit of a problem if the PDF is what you're presenting from. This one exports the
+PDF *and* rescues the notes, each mapped to the right page.
 
-- A **desktop GUI** — pick files, convert a whole folder, or leave a watch folder running,
+- A **desktop GUI:** pick files, convert a whole folder, or leave a watch folder running,
   and connect Google or Canva accounts from the Settings tab.
-- A **CLI and library** — the backend other programs drive, including
+- A **CLI and library:** the backend other programs drive, including
   [presentation-commander](https://github.com/stoatworks-labs/presentation-commander-client),
   which reads the sidecars this produces.
-- A **Nextcloud app** — keeps PDF versions of every presentation in a folder and its
+- A **Nextcloud app:** keeps PDF versions of every presentation in a folder and its
   subfolders up to date automatically.
 
-[![Watch it running — 45 seconds](docs/video-thumb.png)](https://www.youtube.com/watch?v=99-Wl9jfJyY)
+[![Watch it running (45 seconds)](docs/video-thumb.png)](https://www.youtube.com/watch?v=99-Wl9jfJyY)
 
 *A 45-second tour, driven over the app's own HTTP API. The deck it converts is six
-slides with one hidden, and comes out as a five-page PDF with five notes mapped to the
-pages that survived — the problem this tool exists to solve, happening on screen.*
+slides with one hidden, and it comes out as a five-page PDF with five notes mapped to the
+pages that survived. That's the whole reason this tool exists, happening on screen.*
 
 ![Converting a folder of presentations: the form, live per-file results showing pages, notes and which engines ran, and the engine availability grid](docs/screenshots/convert-folder.png)
 
-*Real captures of the running app, not mockups — produced by `npm run screenshots`,
+*These are captures of the running app, not mockups, made by `npm run screenshots`,
 which converts a demo folder and photographs the result.*
 
 <!-- downloads:start -->
@@ -52,8 +52,8 @@ All builds, checksums and release notes: [github.com/stoatworks-labs/presentatio
 
 A deck's slide count and its PDF's page count usually **disagree**, because every exporter
 silently drops hidden or skipped slides. Convert a 4-slide deck whose third slide is
-hidden and you get a 3-page PDF — so a naive tool puts slide 3's notes on page 3, and
-every note from there on is one page out.
+hidden and you get a 3-page PDF, so a naive tool puts slide 3's notes on page 3, and
+every note from there on is a page out.
 
 This tool reads the PDF back, reconciles the two, and records what it did:
 
@@ -63,12 +63,12 @@ This tool reads the PDF back, reconciles the two, and records what it did:
 "alignment": "mismatch"   // couldn't reconcile — notes emitted, but flagged as suspect
 ```
 
-A `mismatch` is surfaced in the CLI, the GUI and the sidecar's `warnings` rather than
-being quietly wrong.
+A `mismatch` shows up in the CLI, the GUI and the sidecar's `warnings` rather than
+being wrong without telling anyone.
 
 ## Install
 
-Requires Node.js 20+.
+Needs Node.js 20+.
 
 ```bash
 git clone https://github.com/stoatworks-labs/presentation-converter.git
@@ -77,8 +77,8 @@ npm install
 npm run build
 ```
 
-For PowerPoint and ODP files, install [LibreOffice](https://www.libreoffice.org/); on
-macOS, Keynote can stand in for it. Check what your machine can do:
+For PowerPoint and ODP files, install [LibreOffice](https://www.libreoffice.org/). On
+macOS, Keynote can stand in for it. To check what your machine can do:
 
 ```bash
 node packages/cli/dist/index.js doctor
@@ -124,14 +124,15 @@ Everything takes `--json` for scripting, and exits non-zero if any file failed.
 | `--exclude <text...>` | skip any path containing this text |
 | `--dry-run` | (batch) list what would be converted, then stop |
 
-Re-runs are incremental: a deck whose PDF and sidecar are already newer than it is
+
+Re-runs are incremental: a deck whose PDF and sidecar are already newer than it gets
 skipped, so a repeat batch over an unchanged folder takes milliseconds.
 
 ## What it converts, and with what
 
-Notes extraction is deliberately **independent of PDF rendering**. For Office and ODF
-files the notes are read straight out of the source package's XML, so they're the
-author's exact text regardless of which engine drew the PDF — and it works headless, with
+I've kept notes extraction **independent of PDF rendering** on purpose. For Office and ODF
+files the notes are read straight out of the source package's XML, so you get the
+author's text word for word whichever engine drew the PDF, and it works headless, with
 no application installed.
 
 | Format | PDF rendered by | Notes read from |
@@ -143,7 +144,7 @@ no application installed.
 | Google Slides | Drive export | Slides API |
 | Canva | PPTX export, rendered locally | the exported `.pptx` (OOXML) |
 
-Keynote cannot run on Linux, so a Linux host needs a paired Mac for `.key` files — see
+Keynote can't run on Linux, so a Linux host needs a paired Mac for `.key` files. See
 [the Nextcloud notes](docs/nextcloud.md).
 
 ### Google Slides
@@ -156,11 +157,11 @@ presentation-converter convert "https://docs.google.com/presentation/d/FILE_ID/e
 
 Connect an account first, either way round:
 
-**In the GUI** — run `presentation-converter serve`, open the **Settings** tab, and either
+**In the GUI:** run `presentation-converter serve`, open the **Settings** tab, and either
 sign in with Google or paste a service-account key. Credentials are stored in your user
-config directory with `0600` permissions; the page shows the exact path.
+config directory with `0600` permissions, and the page shows the exact path.
 
-**By environment variable** — best for servers, and takes precedence over anything saved
+**By environment variable:** best for servers, and it takes precedence over anything saved
 in the GUI:
 
 ```bash
@@ -180,20 +181,20 @@ presentation-converter convert "https://www.canva.com/design/DAFxyz123/edit" -o 
 ```
 
 Or with no setup at all: export from Canva with *Download → PPTX* and convert that file
-like any other PowerPoint deck — Canva embeds the speaker notes in it.
+like any other PowerPoint deck. Canva puts the speaker notes in it.
 
-The engine exports **PPTX, never PDF**, and renders that file locally. Canva's API exposes
-no notes field, so a PPTX has to be fetched anyway; taking the pages from the same artefact
+The engine exports **PPTX, never PDF**, and renders that file locally. Canva's API has
+no notes field, so it has to fetch a PPTX anyway, and taking the pages from the same file
 halves the API cost and guarantees the notes and the pages describe the same version of the
-deck. That does mean LibreOffice or Keynote is required. See [docs/canva.md](docs/canva.md).
+deck. It does mean you need LibreOffice or Keynote. See [docs/canva.md](docs/canva.md).
 
 ### Connecting accounts
 
 ![The Settings tab: Google Slides with sign-in or service-account options, and Canva with its client credentials and redirect URL](docs/screenshots/settings.png)
 
 Credentials are stored in your user config directory with `0600` permissions, and the page
-shows the exact path. Environment variables, when set, take precedence over anything saved
-here.
+shows the exact path. Environment variables, when they're set, take precedence over anything
+saved here.
 
 ## The sidecar
 
@@ -220,8 +221,8 @@ here.
 }
 ```
 
-`notes` is the map consumers read — **PDF page number to note text**. `slides` keeps the
-full picture, including hidden slides that have no page. Full details and the
+`notes` is the map consumers read: **PDF page number to note text**. `slides` keeps the
+full picture, including hidden slides that have no page. The full details and the
 compatibility rules are in [docs/sidecar-format.md](docs/sidecar-format.md).
 
 ## Using it from another program
@@ -241,7 +242,7 @@ Or drive the CLI and parse `--json`, which is what the Nextcloud app does.
 ## Nextcloud app
 
 `nextcloud/presentationconverter` keeps PDFs of everything in the folders your users
-nominate. Install and configuration are in [docs/nextcloud.md](docs/nextcloud.md).
+choose. Install and configuration are in [docs/nextcloud.md](docs/nextcloud.md).
 
 ## Repository layout
 
@@ -264,25 +265,25 @@ npm run screenshots # regenerate docs/screenshots from the running app
 ```
 
 `npm run screenshots` needs the server running (`npm run dev`) and Chrome installed. It
-drives headless Chrome over the DevTools Protocol — no Puppeteer dependency — and measures
+drives headless Chrome over the DevTools Protocol (no Puppeteer dependency) and measures
 each panel so the images clip cleanly instead of relying on hard-coded heights.
 
 ## Status
 
-Verified end to end on macOS against real Keynote-authored fixtures: `.key` and `.pptx`
+I've verified it end to end on macOS against real Keynote-authored fixtures: `.key` and `.pptx`
 conversion, hidden-slide page mapping, folder batches with tree mirroring, incremental
 re-runs, output-collision detection, the watch folder, the GUI, and the worker endpoint.
-The settings and OAuth endpoints are verified too — credential storage and `0600`
+The settings and OAuth endpoints are verified too: credential storage and `0600`
 permissions, redaction (no secret is ever returned to the browser), forged-`state`
 rejection, and the generated consent URL.
 
 Canva is verified as far as it can be without an account: notes extraction from a real
 Canva PPTX export, PKCE generation, the authorisation URL, and design-id parsing.
 
-Not yet exercised against a live service: the Nextcloud app (written but never run — see
-[docs/nextcloud.md](docs/nextcloud.md)), the LibreOffice engine (no LibreOffice on the
-development machine), and full OAuth round trips for Google or Canva — each needs real
-credentials and a human at the consent screen.
+Not tried against a live service yet: the Nextcloud app (written but never run, see
+[docs/nextcloud.md](docs/nextcloud.md)), the LibreOffice engine (there's no LibreOffice on the
+development machine), and full OAuth round trips for Google or Canva, as each of those needs
+real credentials and a human at the consent screen.
 
 <!-- attributions:start -->
 This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
@@ -290,5 +291,5 @@ This project is built on other people's work — see [ATTRIBUTIONS.md](ATTRIBUTI
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE). The Nextcloud app under `nextcloud/` is AGPL-3.0, as
+MIT, see [LICENSE](LICENSE). The Nextcloud app under `nextcloud/` is AGPL-3.0, as
 Nextcloud apps must be; see [nextcloud/LICENSE](nextcloud/LICENSE).
