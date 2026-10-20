@@ -3,6 +3,25 @@
 All notable changes to this project are recorded here. Versions follow
 [semantic versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **A PowerPoint engine** (macOS). A `.pptx` or `.ppt` with no LibreOffice to hand goes to
+  PowerPoint before Keynote, so it is drawn in the deck's own fonts. It works on a copy in
+  PowerPoint's own sandbox folder, so it never asks for folder access, and it leaves alone
+  any deck you already have open. `--pdf-engine powerpoint` forces it.
+
+### Fixed
+
+- **Keynote is chosen by bundle id.** Keynote 14.5 and Keynote Creator Studio install side
+  by side, both called Keynote, and the engine asked for one by name. With both installed,
+  14.5 opens to an "out of date" dialog, and a conversion sent to it hangs. Creator Studio now
+  comes first, and `doctor` says which Keynote it will drive.
+- A deck you already have open in Keynote is recognised by its document id, not its name, so
+  it is never closed under you.
+- A damaged deck now fails with a message saying so, instead of "null is not an object".
+
 ## [0.2.3] — 2026-10-06
 
 A dependency release. No conversion behaviour changed.

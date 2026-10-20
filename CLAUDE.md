@@ -30,13 +30,26 @@ Nextcloud app. Public repo, MIT (the Nextcloud app is AGPL, as Nextcloud apps mu
   and you get slides with no notes, titles or hidden flags. Cost an hour once.
 - Order-preserving XML parsing is deliberate: `<a:br>` line breaks interleave with text
   runs, and a name-keyed parse reorders them.
-- **Keynote engine `maxConcurrency` must stay 1** — it drives a single foreground
-  document; two at once exports the wrong file.
+- **Keynote and PowerPoint engine `maxConcurrency` must stay 1** — each drives a single
+  foreground document; two at once exports the wrong file.
+- **Two Keynotes.** Keynote Creator Studio (`com.apple.Keynote`, 15.x) installs beside the
+  iWork Keynote (`com.apple.iWork.Keynote`, 14.x). With both present the old one opens to a
+  modal "Use the New Version of Keynote … out of date" and answers nothing, so a conversion
+  hangs. The engine addresses Keynote by bundle id, Creator Studio first. Never go back to
+  `Application('Keynote')`: that name resolves to whichever Launch Services fancies.
+- **Sandboxed apps and `POSIX file`.** In AppleScript, a `POSIX file` written inside the
+  `tell` block reaches Creator Studio as a file it may not read: "can't be imported", then
+  -1700 on the missing value. Make file references before the `tell` (or use JXA's `Path()`,
+  as the Keynote engine does).
 - LibreOffice needs a private `-env:UserInstallation` profile per invocation or parallel
   runs fail intermittently.
-- PowerPoint's modern AppleScript dictionary has **no scriptable save-as**, only a
-  `default save format` property. Don't try to build a PowerPoint engine — Keynote imports
-  `.pptx` and covers macOS-without-LibreOffice.
+- **PowerPoint does export over AppleScript** (`save thePres in f as save as PDF`,
+  16.112.3). An older note here said it had no scriptable save-as; that was wrong. The engine
+  (`engines/powerpoint.ts`) copies the deck into PowerPoint's own container
+  (`~/Library/Containers/com.microsoft.Powerpoint/Data/tmp/`), because a sandboxed PowerPoint
+  asked to save anywhere else stops to ask for folder access. It finds the copy by its
+  unique name, never `active presentation`, and closes only that. It sits ahead of Keynote
+  and behind LibreOffice. Its PDF drops hidden slides, like every other exporter's.
 - Sidecar naming (`X.pdf` → `X.notes.json`) is a contract with
   `presentation-commander-client`; changing it breaks that app.
 
@@ -83,9 +96,15 @@ Verified on macOS against real Keynote-authored fixtures: `.key`/`.pptx` convers
 hidden-slide mapping, batch + tree mirroring, incremental skip, collision detection, watch
 folder, GUI, worker endpoint, and a real Canva PPTX export. Settings/OAuth endpoints verified: 0600 storage, redaction,
 forged-`state` rejection, consent-URL parameters, blank-secret preservation.
+2026-10-20 (macOS 26.4.1, see `docs/NOTES.md`): Keynote Creator Studio 15.3.1 on `.pptx` and
+`.key`, cold and warm; PowerPoint 16.112.3 on `.pptx` and `.ppt`, with PowerPoint already
+running. `PRESENTATION_CONVERTER_LIVE_APPS=1 npm test` re-runs both against
+`test/fixtures/keynote-hidden-slide.pptx`.
 **Unverified:** the Nextcloud app (no PHP/Docker on this machine — never run or
-lint-checked), the LibreOffice engine (not installed), and a real Google OAuth round trip
-or Slides conversion (needs real credentials + a human at the consent screen).
+lint-checked), the LibreOffice engine (not installed), PowerPoint started from cold and its
+first Automation prompt, Keynote 14.5 on a Mac without Creator Studio, and a real Google
+OAuth round trip or Slides conversion (needs real credentials + a human at the consent
+screen).
 
 ## Notes
 - "Commit" = commit **and** push.

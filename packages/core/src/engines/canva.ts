@@ -462,7 +462,7 @@ export const canvaEngine: PdfEngine = {
     } catch {
       throw new Error(
         'Canva decks are exported as PowerPoint and then rendered locally, but no engine can render ' +
-          '.pptx on this machine. Install LibreOffice, or run on a Mac with Keynote.'
+          '.pptx on this machine. Install LibreOffice, or run on a Mac with PowerPoint or Keynote.'
       )
     }
 

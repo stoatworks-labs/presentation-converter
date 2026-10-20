@@ -77,8 +77,9 @@ npm install
 npm run build
 ```
 
-For PowerPoint and ODP files, install [LibreOffice](https://www.libreoffice.org/). On
-macOS, Keynote can stand in for it. To check what your machine can do:
+For PowerPoint and ODP files, install [LibreOffice](https://www.libreoffice.org/). On a
+Mac, PowerPoint or Keynote can stand in for it with PowerPoint decks; ODP needs
+LibreOffice. To check what your machine can do:
 
 ```bash
 node packages/cli/dist/index.js doctor
@@ -120,7 +121,7 @@ Everything takes `--json` for scripting, and exits non-zero if any file failed.
 | `--flat` | don't mirror subfolders — everything lands in one directory |
 | `--force` | reconvert even when the output is already newer than the source |
 | `--no-sidecar` | write only the PDF |
-| `--pdf-engine <id>` | force `keynote`, `libreoffice`, `google-slides` or `canva` |
+| `--pdf-engine <id>` | force `libreoffice`, `powerpoint`, `keynote`, `google-slides` or `canva` |
 | `--exclude <text...>` | skip any path containing this text |
 | `--dry-run` | (batch) list what would be converted, then stop |
 
@@ -138,14 +139,24 @@ no application installed.
 | Format | PDF rendered by | Notes read from |
 | --- | --- | --- |
 | `.key` | Keynote (macOS only) | Keynote |
-| `.pptx` | LibreOffice, or Keynote on macOS | the `.pptx` package (OOXML) |
-| `.ppt` | LibreOffice | promoted to `.pptx`, then the package |
+| `.pptx` | LibreOffice, or PowerPoint, or Keynote on macOS | the `.pptx` package (OOXML) |
+| `.ppt` | LibreOffice, or PowerPoint, or Keynote on macOS | promoted to `.pptx` by LibreOffice, then the package |
 | `.odp` | LibreOffice | the `.odp` package (ODF) |
 | Google Slides | Drive export | Slides API |
 | Canva | PPTX export, rendered locally | the exported `.pptx` (OOXML) |
 
 Keynote can't run on Linux, so a Linux host needs a paired Mac for `.key` files. See
 [the Nextcloud notes](docs/nextcloud.md).
+
+On a Mac with no LibreOffice, a PowerPoint deck goes to PowerPoint if it's installed, since
+it draws the deck in the author's own fonts, and to Keynote if not. Both are driven over
+AppleScript, so the first time, macOS asks whether whatever is running the converter (your
+terminal, say) may control them. A `.ppt` still needs LibreOffice for its notes; without
+it, convert with `--no-sidecar`.
+
+If you have both Keynote and Keynote Creator Studio installed, it drives Creator Studio.
+The older Keynote opens to a dialog telling you it's out of date and waits for a click that
+never comes, so it's left alone. `doctor` says which one it will use.
 
 ### Google Slides
 
@@ -186,7 +197,7 @@ like any other PowerPoint deck. Canva puts the speaker notes in it.
 The engine exports **PPTX, never PDF**, and renders that file locally. Canva's API has
 no notes field, so it has to fetch a PPTX anyway, and taking the pages from the same file
 halves the API cost and guarantees the notes and the pages describe the same version of the
-deck. It does mean you need LibreOffice or Keynote. See [docs/canva.md](docs/canva.md).
+deck. It does mean you need LibreOffice, PowerPoint or Keynote. See [docs/canva.md](docs/canva.md).
 
 ### Connecting accounts
 
@@ -273,6 +284,13 @@ each panel so the images clip cleanly instead of relying on hard-coded heights.
 I've verified it end to end on macOS against real Keynote-authored fixtures: `.key` and `.pptx`
 conversion, hidden-slide page mapping, folder batches with tree mirroring, incremental
 re-runs, output-collision detection, the watch folder, the GUI, and the worker endpoint.
+
+On 2026-10-20 (macOS 26.4.1) I ran the two app engines again: Keynote Creator Studio 15.3.1
+converts `.pptx` and `.key` with a hidden slide mapped correctly, whether or not Keynote was
+already open, and PowerPoint 16.112.3 converts `.pptx` and `.ppt` the same way. PowerPoint
+has only been tried while it was already running; starting it from cold, and the Automation
+prompt the first time, haven't been. The older Keynote 14.5 isn't driven at all when Creator
+Studio is installed (see above), and hasn't been tried on a Mac without Creator Studio.
 The settings and OAuth endpoints are verified too: credential storage and `0600`
 permissions, redaction (no secret is ever returned to the browser), forged-`state`
 rejection, and the generated consent URL.
@@ -282,7 +300,7 @@ Canva PPTX export, PKCE generation, the authorisation URL, and design-id parsing
 
 Not tried against a live service yet: the Nextcloud app (written but never run, see
 [docs/nextcloud.md](docs/nextcloud.md)), the LibreOffice engine (there's no LibreOffice on the
-development machine), and full OAuth round trips for Google or Canva, as each of those needs
+development machine, so `.odp` rendering is untried too), and full OAuth round trips for Google or Canva, as each of those needs
 real credentials and a human at the consent screen.
 
 <!-- attributions:start -->

@@ -1,5 +1,6 @@
 import { keynoteEngine, keynoteNotesEngine } from './keynote.js'
 import { libreOfficeEngine } from './libreoffice.js'
+import { powerPointEngine } from './powerpoint.js'
 import { packageNotesEngine } from './documentNotes.js'
 import { googleSlidesEngine, googleSlidesNotesEngine } from './google.js'
 import { canvaEngine, canvaNotesEngine } from './canva.js'
@@ -12,6 +13,7 @@ import type {
 
 export const PDF_ENGINES: PdfEngine[] = [
   libreOfficeEngine,
+  powerPointEngine,
   keynoteEngine,
   googleSlidesEngine,
   canvaEngine
@@ -26,14 +28,15 @@ export const NOTES_ENGINES: NotesEngine[] = [
 /**
  * Preferred PDF engine per format, most-preferred first.
  *
- * LibreOffice leads for the Office formats because it renders OOXML directly
- * and is the only option on a headless host; Keynote is the macOS fallback for
- * a Mac with no LibreOffice installed, since it imports PowerPoint decks.
+ * LibreOffice leads for the Office formats because it renders OOXML directly,
+ * runs headless and runs two at a time. On a Mac without it, PowerPoint comes
+ * next — the deck's own application, so its fonts and layout are the author's —
+ * and Keynote last, since it imports PowerPoint decks through a translation.
  */
 const PDF_PREFERENCE: Record<PresentationFormat, string[]> = {
   keynote: ['keynote'],
-  pptx: ['libreoffice', 'keynote'],
-  ppt: ['libreoffice', 'keynote'],
+  pptx: ['libreoffice', 'powerpoint', 'keynote'],
+  ppt: ['libreoffice', 'powerpoint', 'keynote'],
   odp: ['libreoffice'],
   'google-slides': ['google-slides'],
   canva: ['canva']

@@ -68,7 +68,10 @@ function addConversionOptions(command: Command): Command {
     .option('-o, --out-dir <dir>', 'write PDFs to this directory instead of beside the source')
     .option('--force', 'reconvert even when the output is already up to date')
     .option('--no-sidecar', 'write only the PDF, no .notes.json')
-    .option('--pdf-engine <id>', 'force a PDF engine (keynote, libreoffice, google-slides)')
+    .option(
+      '--pdf-engine <id>',
+      'force a PDF engine (libreoffice, powerpoint, keynote, google-slides, canva)'
+    )
     .option('--notes-engine <id>', 'force a notes engine (keynote, package-xml, google-slides)')
     .option('--timeout <seconds>', 'per-file timeout', (value) => Number(value) * 1000)
     .option('--json', 'emit machine-readable JSON instead of human output')
@@ -352,7 +355,7 @@ program
     const anyPdf = engines.some((e) => e.kind === 'pdf' && e.availability.available)
     if (!anyPdf) {
       process.stdout.write(
-        `${red('No PDF engine is available.')} Install LibreOffice, or run on a Mac with Keynote.\n`
+        `${red('No PDF engine is available.')} Install LibreOffice, or run on a Mac with PowerPoint or Keynote.\n`
       )
       process.exitCode = 1
     }

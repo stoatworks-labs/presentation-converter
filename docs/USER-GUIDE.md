@@ -41,8 +41,8 @@ npm install
 npm run build
 ```
 
-For PowerPoint and ODP files, install [LibreOffice](https://www.libreoffice.org/). On macOS,
-Keynote can stand in for it.
+For PowerPoint and ODP files, install [LibreOffice](https://www.libreoffice.org/). On a Mac,
+PowerPoint or Keynote can stand in for it with PowerPoint decks; ODP needs LibreOffice.
 
 **Find out what your machine can actually do before you need it to:**
 
@@ -85,7 +85,7 @@ so a repeat batch over an unchanged folder takes milliseconds. Use `--force` to 
 | `--flat` | Don't mirror subfolders — everything lands in one directory |
 | `--force` | Reconvert even when the output is already newer than the source |
 | `--no-sidecar` | Write only the PDF |
-| `--pdf-engine <id>` | Force `keynote`, `libreoffice`, `google-slides` or `canva` |
+| `--pdf-engine <id>` | Force `libreoffice`, `powerpoint`, `keynote`, `google-slides` or `canva` |
 | `--exclude <text...>` | Skip any path containing this text |
 | `--dry-run` | (batch) List what would be converted, then stop |
 
@@ -101,14 +101,24 @@ so a repeat batch over an unchanged folder takes milliseconds. Use `--force` to 
 | Format | PDF rendered by | Notes read from |
 |---|---|---|
 | `.key` | Keynote (**macOS only**) | Keynote |
-| `.pptx` | LibreOffice, or Keynote on macOS | the `.pptx` package (OOXML) |
-| `.ppt` | LibreOffice | promoted to `.pptx`, then the package |
+| `.pptx` | LibreOffice, or PowerPoint, or Keynote on macOS | the `.pptx` package (OOXML) |
+| `.ppt` | LibreOffice, or PowerPoint, or Keynote on macOS | promoted to `.pptx` by LibreOffice, then the package |
 | `.odp` | LibreOffice | the `.odp` package (ODF) |
 | Google Slides | Drive export | Slides API |
 | Canva | PPTX export, rendered locally | the exported `.pptx` (OOXML) |
 
 **Keynote can't run on Linux**, so a Linux host needs a paired Mac for `.key` files. See
 [nextcloud.md](nextcloud.md).
+
+On a Mac with no LibreOffice, a PowerPoint deck goes to **PowerPoint** if it's installed, since
+it draws the deck in the author's own fonts, and to Keynote if not. Both are driven over
+AppleScript, so the first time, macOS asks whether whatever is running the converter (your
+terminal, say) may control them. A `.ppt` still needs LibreOffice for its notes; without it,
+convert with `--no-sidecar`.
+
+> **Two Keynotes?** With both Keynote and Keynote Creator Studio installed, it drives
+> **Creator Studio**. The older Keynote opens to a dialog telling you it's out of date and
+> waits for a click that never comes, so it's left alone. `doctor` says which one it will use.
 
 ---
 
@@ -153,7 +163,7 @@ any other PowerPoint deck. Canva puts the speaker notes in it.
 > **The Canva engine exports PPTX, never PDF**, and renders that file locally. Canva's API
 > has no notes field, so it has to fetch a PPTX anyway, and taking the pages from the same file
 > halves the API cost and guarantees the notes and the pages describe the same version of the
-> deck. **It does mean you need LibreOffice or Keynote.**
+> deck. **It does mean you need LibreOffice, PowerPoint or Keynote.**
 
 See [canva.md](canva.md).
 
@@ -166,7 +176,9 @@ See [canva.md](canva.md).
 | **Notes are one slide out** | Check `alignment` in the sidecar. A `mismatch` means it could not reconcile the counts. |
 | **Slide count ≠ page count** | Normal — exporters drop hidden slides. That is what the reconciliation is for. |
 | **`.key` file won't convert** | Keynote is macOS-only. A Linux host needs a paired Mac. |
-| **`.pptx` or `.odp` won't convert** | LibreOffice isn't installed or isn't found. Run `doctor`. |
+| **`.pptx` or `.odp` won't convert** | LibreOffice isn't installed or isn't found (on a Mac, PowerPoint or Keynote covers `.pptx`). Run `doctor`. |
+| **PowerPoint: "has not let this process control PowerPoint"** | Allow it in System Settings ▸ Privacy & Security ▸ Automation. |
+| **A Keynote or PowerPoint conversion times out** | A dialog is open in the app, waiting for you. Answer it and run again. |
 | **Nothing happened on a re-run** | Incremental skip — the outputs are newer than the source. Use `--force`. |
 | **Google: "file not found" with a service account** | The deck has not been shared with the service account's email address. |
 | **Google: export fails on a big deck** | Drive refuses presentations over 10 MB. |

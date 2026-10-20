@@ -30,7 +30,7 @@ The Canva engine deliberately exports **PPTX only, never PDF**, even though Canv
 produce PDF directly:
 
 1. Export the design as PPTX (async: create job → poll → download).
-2. Render *that file* to PDF locally, via LibreOffice or Keynote.
+2. Render *that file* to PDF locally, via LibreOffice, PowerPoint or Keynote.
 3. Read the notes from the same file.
 4. Reconcile slides against PDF pages exactly as every other format does.
 
@@ -78,7 +78,7 @@ export PRESENTATION_CONVERTER_CANVA_REFRESH_TOKEN=...
 - **No local files.** Canva has no local format, so the watch folder and the Nextcloud
   scanner have nothing to pick up. Canva decks must be named by URL or id.
 - **A local pptx renderer is still required.** The engine renders the exported PPTX itself,
-  so it needs LibreOffice (any platform) or Keynote (macOS). Without one it fails with that
+  so it needs LibreOffice (any platform), or PowerPoint or Keynote (macOS). Without one it fails with that
   explicit message rather than a confusing engine error.
 - **Rate limits** — roughly 75 exports per user per 5 minutes, 500 per day.
 - **Output naming.** A design id makes a poor filename, so the PDF is named after the

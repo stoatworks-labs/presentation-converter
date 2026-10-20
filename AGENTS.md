@@ -72,14 +72,33 @@ Verified on macOS against real Keynote-authored fixtures: `.key` and `.pptx` con
 hidden-slide mapping, batch and tree mirroring, incremental skip, collision detection, watch
 folder, GUI, the worker endpoint, and a real Canva PPTX export. Settings and OAuth endpoints
 verified for 0600 storage, redaction, forged-`state` rejection, consent-URL parameters and
-blank-secret preservation.
+blank-secret preservation. That run doesn't record which Keynote it used; it predates the
+engine choosing between two.
+
+Verified on 2026-10-20, macOS 26.4.1 — details and error numbers in
+[docs/NOTES.md](docs/NOTES.md):
+
+- **Keynote Creator Studio 15.3.1** (`com.apple.Keynote`): `.pptx` and `.key` to PDF, from
+  cold and with Keynote already running; a hidden/skipped slide left out and mapped
+  `adjusted`; a `.key` the user already had open left open; a damaged deck failing with a
+  message rather than hanging.
+- **PowerPoint 16.112.3**: `.pptx` and `.ppt` to PDF, hidden slide left out and mapped
+  `adjusted` — with PowerPoint already running, and another deck open in it untouched.
 
 **Unverified, and the README says so:**
 
+- **PowerPoint started from cold**, and the Automation prompt the first time a process asks to
+  control it. Every run so far had PowerPoint open already and permission granted.
+- **Keynote 14.5** (`com.apple.iWork.Keynote`). With Creator Studio installed it opens to an
+  "out of date" modal and hangs a conversion, so the engine no longer drives it there. On a
+  Mac without Creator Studio it is still the engine's Keynote, and that hasn't been tried
+  since the engine started choosing.
+
 - The **Nextcloud app has never been run** — written on a machine with neither PHP nor
   Docker, so never executed or even lint-checked.
-- The **LibreOffice engine** — LibreOffice was not installed; Office and ODF rendering was
-  exercised through Keynote instead.
+- The **LibreOffice engine** — LibreOffice was not installed. Office rendering was exercised
+  through Keynote and PowerPoint instead; nothing else renders `.odp`, so ODF rendering is
+  untried, and so are `.ppt` notes, which LibreOffice promotes to `.pptx` first.
 - **Live OAuth round trips** for Google and Canva — each needs real credentials and a human
   at the consent screen.
 
@@ -87,13 +106,16 @@ Do not let a new build quietly upgrade any of these to "working".
 
 ## 7. Traps
 
-The expensive ones are in `CLAUDE.md`; the two worth knowing before you touch anything:
+The expensive ones are in `CLAUDE.md`; the three worth knowing before you touch anything:
 
 - **fast-xml-parser in `preserveOrder` mode: do NOT set `attributesGroupName`.** It
   double-nests attributes under `:@`, so every attribute lookup silently returns `undefined`
   and you get slides with no notes, titles or hidden flags.
-- **The Keynote engine's `maxConcurrency` must stay 1.** It drives a single foreground
-  document; two at once exports the wrong file.
+- **The Keynote and PowerPoint engines' `maxConcurrency` must stay 1.** Each drives a
+  single foreground document; two at once exports the wrong file.
+- **Address Keynote by bundle id, never by name.** Keynote 14.5 and Keynote Creator Studio
+  are both called Keynote, and with both installed the old one hangs on an "out of date"
+  modal. `KEYNOTE_BUNDLE_IDS` in `engines/keynote.ts` puts Creator Studio first.
 
 ## 8. Conventions
 
