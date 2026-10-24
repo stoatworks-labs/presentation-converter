@@ -5,6 +5,8 @@ All notable changes to this project are recorded here. Versions follow
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-10-24
+
 ### Added
 
 - **A PowerPoint engine** (macOS). A `.pptx` or `.ppt` with no LibreOffice to hand goes to
