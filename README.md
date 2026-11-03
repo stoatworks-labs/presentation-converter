@@ -8,6 +8,8 @@
 Converts Keynote, PowerPoint, Google Slides, Canva and OpenDocument presentations to PDF,
 **and keeps the presenter notes**, in a `.notes.json` sidecar written next to each PDF.
 
+The [project page](https://stoatworks-labs.com/software/presentation-converter/) has the downloads, the [user guide](https://stoatworks-labs.com/software/presentation-converter/guide/) and the video.
+
 Exporting a deck to PDF is easy. Every tool that does it throws the speaker notes in the bin,
 which is a bit of a problem if the PDF is what you're presenting from. This one exports the
 PDF *and* rescues the notes, each mapped to the right page.
